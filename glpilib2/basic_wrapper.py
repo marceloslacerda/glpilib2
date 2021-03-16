@@ -1,0 +1,1031 @@
+#!/usr/bin/env python3
+import inspect
+import json
+import logging
+import re
+from dataclasses import dataclass
+from enum import Enum
+from json import JSONDecodeError
+from typing import Dict, Optional, Any, List, Tuple, Union, IO
+
+import requests
+
+logging.basicConfig(
+    level=logging.WARNING, format="%(asctime)s: %(name)s: %(levelname)s: %(message)s"
+)
+logger = logging.getLogger("glpi_wrapper")
+
+JSON = Dict[str, Any]
+
+
+class SortOrder(Enum):
+    Ascending = "ASC"
+    Descending = "DESC"
+
+    def __str__(self):
+        return self.value
+
+
+@dataclass
+class ResponseRange:
+    """Some API methods produce a response in the header that describe the range of
+    the query. That data is collected and wrapped in this type of object.
+    To obtain it use the `response_range` property of RequestHandler.
+    """
+
+    start: int
+    end: int
+    count: int
+    max: int
+
+    def __repr__(self):
+        return f"{str(self.start)}-{str(self.start)}/{self.count} Max: {self.max}"
+
+
+class RequestHandler:
+    """RequestHandler encapsulates the GLPI API in a handy class.
+
+    Note: Most methods require an active session to perform. If unsure
+    call init_session() after the instantiation.
+
+    Example::
+
+        >>> handler = RequestHandler('localhost', '123456', '654321')
+        >>> handler.init_session()
+        >>> my_profiles = handler.get_my_profiles()
+        >>> handler.kill_session()
+    """
+
+    def __init__(
+        self,
+        host_url: str,
+        app_token: str,
+        user_api_token: str,
+        verify_tls: bool = True,
+    ):
+        """Creates a new RequestHandler instance.
+
+        :param verify_tls: If your glpi server is using tls with a bad
+                           certificate, you will need to set this to false.
+
+        host_url, app_token and user_api_token are described in the module
+        documentation.
+
+        Note: This method, doesn't call init_session(). See The class
+        documentation for more information.
+        """
+        self.host_url = host_url
+        self.app_token = app_token
+        self.user_api_token = user_api_token
+        self.__session_token = None
+        self.verify_tls = verify_tls
+        self.__session = None
+        self.__response_header = None
+
+    def _header_dict(self, extra: Dict[str, str]) -> Dict[str, str]:
+        d = {
+            "Content-Type": "application/json",
+            "App-Token": self.app_token,
+        }
+        d.update(extra)
+        return d
+
+    def init_session(self):
+        """Request a session token to uses other API endpoints."""
+        if self.__session_token is not None:
+            raise AttributeError("Session already initialized.")
+        auth = f"user_token {self.user_api_token}"
+        r = self._do_get("initSession", {"Authorization": auth})
+        self.__session_token = r.json()["session_token"]
+        logger.info("Session initiaded")
+
+    def _get_method_url(self, request_type: str) -> str:
+        return f"{self.host_url}/apirest.php/{request_type}"
+
+    def _do_get(
+        self,
+        action: str,
+        header: Dict[str, str],
+        parameters: Union[Dict[str, Any], List[Tuple[str, Any]]] = None,
+        data: Union[Dict[str, Any], List[Tuple[str, Any]]] = None,
+    ) -> requests.Response:
+        url = self._get_method_url(action)
+        headers = self._header_dict(header)
+        logger.debug(f"Calling method {action}")
+        if self.__session is None:
+            self.__session = requests.Session()
+        r = self.__session.get(
+            url, headers=headers, verify=self.verify_tls, params=parameters, data=data
+        )
+        self.__response_header = r.headers
+        r.raise_for_status()
+        return r
+
+    def _get_json(
+        self,
+        method: str,
+        parameters: Union[JSON, List[Tuple[str, Any]]] = None,
+        data: Union[JSON, List[Tuple[str, Any]]] = None,
+    ) -> Union[JSON, List[JSON]]:
+        response = self._do_get(
+            method, {"Session-Token": self.session_token}, parameters, data
+        )
+        try:
+            return response.json()
+        except JSONDecodeError:
+            if len(response.text.strip()) == 0:
+                logger.error("The API method %s produced a blank response.", method)
+            else:
+                logger.error(
+                    "Failed to decode the method %s's response as a JSON: \n%s\n ...",
+                    method,
+                    response.text[:100],
+                )
+            raise
+
+    @staticmethod
+    def __keys_to_int(dict_: Dict):
+        for k, v in list(dict_.items()):
+            try:
+                i = int(k)
+                del dict_[k]
+                dict_[i] = v
+            except ValueError:
+                pass
+
+    def __get_request_parameters(self, rename: Dict[str, str] = None):
+        """Build request parameters as list of tuples out of the optional
+        values of the calling method.
+
+        :parameter rename Renames the resulting parameter using the items of
+        this dict."""
+        if rename is None:
+            rename = {}
+        currentframe = inspect.currentframe()
+        try:
+            frame = inspect.getouterframes(currentframe)[1]
+            try:
+                method = getattr(self, frame.function)
+                sig = inspect.signature(method)
+                request_parameters = []
+                for parameter in sig.parameters.values():
+                    parameter_name = parameter.name
+                    parameter_value = frame.frame.f_locals[parameter_name]
+                    if parameter_name in rename:
+                        parameter_name = rename[parameter_name]
+                    if (
+                        parameter.default is not inspect.Parameter.empty
+                        and parameter_value != parameter.default
+                    ):
+                        if (
+                            type(parameter_value) == list
+                            or type(parameter_value) == tuple
+                        ):
+                            for item in parameter_value:
+                                request_parameters.append((parameter_name + "[]", item))
+                        else:
+                            request_parameters.append((parameter_name, parameter_value))
+                return request_parameters
+            finally:
+                del frame
+        finally:
+            del currentframe
+
+    @property
+    def response_range(self) -> ResponseRange:
+        if self.__response_header is None:
+            raise AttributeError("No request made")
+        elif (
+            "Content-Range" not in self.__response_header
+            or "Accept-Range" not in self.__response_header
+        ):
+            raise AttributeError("The previous request did not return a range")
+        else:
+            content_range = self.__response_header["Content-Range"]
+            match = re.match(
+                r"(?P<start>\d+)-(?P<end>\d+)/(?P<count>\d+)", content_range
+            )
+            s = self.__response_header["Accept-Range"].strip().split()[1]
+            accept_range = int(s)
+            return ResponseRange(
+                int(match.group("start")),
+                int(match.group("end")),
+                int(match.group("count")),
+                accept_range,
+            )
+
+    def kill_session(self, session_id: Optional[str] = None):
+        """Destroy a session identified by a session token.
+        Defaults to the current open session."""
+        if session_id is None:
+            if self.__session_token is None:
+                raise AttributeError(
+                    "Request handler was not initiated, nothing to be done."
+                )
+            else:
+                self._do_get("killSession", {"Session-Token": self.session_token})
+                self.__session_token = None
+        else:
+            self._do_get("killSession", {"Session-Token": session_id})
+        logger.info("Session was terminated successfully.")
+
+    @property
+    def session_token(self) -> str:
+        if self.__session_token is None:
+            raise AttributeError(
+                "Request handler was not initiated! Please call init_session"
+                "if you want to start a new session."
+            )
+        return self.__session_token
+
+    def get_my_profiles(self) -> List[JSON]:
+        """Return all the profiles associated to logged user.
+        Example of :return::
+
+        [
+             {
+                 'id': 1
+                 'name': "Super-admin",
+                 'entities': [
+                         ...
+                 ]...
+            },...
+        ]
+        """
+        return self._get_json("getMyProfiles")["myprofiles"]
+
+    def get_active_profile(self) -> JSON:
+        """Return the current active profile.
+        Example of :return::
+
+        {
+            'name': "Super-admin",
+            'entities': [
+                ...
+            ]
+        }"""
+        return self._get_json("getActiveProfile")["active_profile"]
+
+    def change_active_profile(self, profile_id):
+        """Change active profile to the one indicated by profile_id.
+        Use getMyProfiles to obtain the possible profiles.
+
+        :raises AttributeError: when the profile can't be found"""
+        r = self._do_post(
+            "changeActiveProfile", {"profiles_id": profile_id}, on_error_raise=False
+        )
+        if r.status_code == 404:
+            raise AttributeError("Profile not found")
+
+    def _do_method(
+        self,
+        method: str,
+        api_method_url: str,
+        data: Union[JSON, List[Tuple[str, Any]]] = None,
+        headers: Dict[str, str] = None,
+        on_error_raise=True,
+        files=None,
+    ) -> requests.Response:
+        if headers is None:
+            headers = {}
+        headers["Session-Token"] = self.session_token
+        url = self._get_method_url(api_method_url)
+        headers = self._header_dict(headers)
+        if self.__session is None:
+            self.__session = requests.Session()
+        logger.debug(f"Calling method {api_method_url}")
+        r = getattr(self.__session, method)(
+            url, headers=headers, verify=self.verify_tls, json=data, files=files
+        )
+        if on_error_raise:
+            r.raise_for_status()
+        return r
+
+    def _do_post(
+        self,
+        action: str,
+        data: Union[JSON, List[Tuple[str, Any]]],
+        headers: Dict[str, str] = None,
+        on_error_raise=True,
+        files=None,
+    ) -> requests.Response:
+        return self._do_method(
+            method="post",
+            api_method_url=action,
+            data=data,
+            headers=headers,
+            on_error_raise=on_error_raise,
+            files=files,
+        )
+
+    def get_my_entities(self, recursive: bool = False) -> List[JSON]:
+        """Return all the possible entities of the current logged user (and for current
+        active profile).
+        Example of :return::
+
+        [
+            {
+                'id':   71
+                'name': "my_entity"
+            },
+            ...
+        ]"""
+        return self._get_json(
+            "getMyEntities", parameters={"is_recursive": str(recursive).lower()}
+        )["myentities"]
+
+    def get_active_entities(self) -> JSON:
+        """Return active entities of current logged user.
+
+        Example of :return::
+
+        {
+            'id': 1,
+            'active_entity_recursive': true,
+            'active_entities': [
+                {"id":1},
+                {"id":71},...
+            ]
+        }
+        """
+        return self._get_json("getActiveEntities")["active_entity"]
+
+    def change_active_entity(self, entity_id):
+        """Change active entity to the entity_id one. See get_my_entities endpoint for
+        possible entities.
+
+        Note that due to a bug with GLPI 9.5.3 if the API cannot find a valid entity
+        with that id it will just report a "Bad Request".
+        """
+        r = self._do_post(
+            "changeActiveEntities", {"entities_id": entity_id}, on_error_raise=False
+        )
+        if r.status_code == 400:
+            raise AttributeError(r.json()[1])
+
+    def get_full_session(self) -> JSON:
+        """
+        Return the current php $_SESSION.
+
+        Example of :return::
+
+        {
+            'valid_id': ...,
+            'glpi_currenttime': ...,
+            'glpi_use_mode': ...,
+            ...
+        }
+        """
+        return self._get_json("getFullSession")["session"]
+
+    def get_glpi_config(self) -> JSON:
+        """Return the current $CFG_GLPI.
+
+        Example of :return::
+
+        {
+            'languages': ...,
+            'glpitables': ...,
+            'unicity_types':...,
+            ...
+        }
+        """
+        return self._get_json("getGlpiConfig")["cfg_glpi"]
+
+    def get_item(
+        self,
+        item_type: str,
+        id_: int,
+        expand_dropdowns: bool = False,
+        get_hateoas: bool = True,
+        get_sha1: bool = False,
+        with_devices: bool = False,
+        with_disks: bool = False,
+        with_softwares: bool = False,
+        with_connections: bool = False,
+        with_networkports: bool = False,
+        with_infocoms: bool = False,
+        with_contracts: bool = False,
+        with_documents: bool = False,
+        with_tickets: bool = False,
+        with_problems: bool = False,
+        with_changes: bool = False,
+        with_notes: bool = False,
+        with_logs: bool = False,
+        add_key_names: List[str] = None,
+    ) -> JSON:
+        """Return an instance of `item_type` identified by `id` and its associated
+        fields.
+
+        Documents and User pictures are retrieved with their respective methods.
+
+        Parameters:
+        -----------
+
+        item_type: str
+            Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
+        id_ : int
+            Unique identifier of the `itemtype`.
+        expand_dropdowns : bool, default False
+            Show dropdown name instead of `id`.
+        get_hateoas : bool, default True
+            Show relations of the item in a `links` attribute.
+            See: https://en.wikipedia.org/wiki/HATEOAS
+        get_sha1 : bool, default False
+            Get a sha1 signature instead of the full answer.
+        with_devices : bool, default False
+            Only for [Computer, NetworkEquipment, Peripheral, Phone, Printer], retrieve
+            the associated components.
+        with_disks : bool, default False
+            Only for Computer, retrieve the associated file-systems.
+        with_softwares : bool, default False
+            Only for Computer, retrieve the associated software's installations.
+        with_connections : bool, default False
+            Only for Computer, retrieve the associated direct connections (like
+            peripherals and printers).
+        with_networkports : bool, default False
+            Retrieve all network's connections and advanced network's information.
+        with_infocoms : bool, default False
+            Retrieve financial and administrative information.
+        with_contracts : bool, default False
+            Retrieve associated contracts.
+        with_documents : bool, default False
+            Retrieve associated external documents.
+        with_tickets : bool, default False
+            Retrieve associated ITIL tickets.
+        with_problems : bool, default False
+            Retrieve associated ITIL problems.
+        with_changes : bool, default False
+            Retrieve associated ITIL changes.
+        with_notes : bool, default False
+            Retrieve Notes.
+        with_logs : bool, default False
+            Retrieve item history.
+        add_key_names : List[str], default None
+            Retrieve friendly names of the keys "id" keys.
+            Eg.: ['id', 'entities_id', 'groups_id_tech' ...]
+
+        Example of :return::
+
+        {
+            "id": 71,
+            "entities_id": "Root Entity",
+            "name": "adelaunay-ThinkPad-Edge-E320",
+            "serial": "12345",
+            ...
+        }
+        """
+        if not get_hateoas:
+            get_hateoas = 0
+        request_parameters = self.__get_request_parameters(
+            rename={"add_key_names": "add_keys_names"}
+        )
+        return self._get_json(f"{item_type}/{id_}", parameters=request_parameters)
+
+    def get_many_items(
+        self,
+        item_type,
+        expand_dropdowns: bool = False,
+        get_hateoas: bool = True,
+        only_id: bool = False,
+        range_: Tuple[int, int] = None,
+        sort_by: str = None,
+        order: SortOrder = None,
+        filter_by: Dict[str, str] = None,
+        is_deleted: bool = False,
+        add_key_names: List[str] = None,
+    ) -> List[JSON]:
+        """It returns a set of items identified by `item_type`
+
+        Parameters:
+        ----------
+
+        item_type: str
+            Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
+        expand_dropdowns: bool, default False
+            Show dropdown name instead of `id`.
+        get_hateoas : bool, default True
+            Show relations of the item in a `links` attribute.
+            See: https://en.wikipedia.org/wiki/HATEOAS
+        only_id: bool, default False
+            Only `id` and `links` are returned.
+        range_: Tuple(int, int), default (0, 50)
+            The start and end of the pagination.
+        sort_by: str, default None
+            Name of the field to sort by.
+        order: SortOrder, default SortOrder.Ascending
+            Sort the results according to the sort order of the `sort` field.
+        filter_by: Dict[str, str], default None
+            Filters to pass on the query.
+        is_deleted: bool (default: false):
+            Return deleted elements.
+        add_key_names: List[str], default None
+            Retrieve friendly names of the keys "id" keys.
+            Eg.: ['id', 'entities_id', 'groups_id_tech' ...]
+
+
+        Example of :return::
+        [
+            {
+                "id": 34,
+                "entities_id": "Root Entity",
+                "name": "glpi",
+                ...
+            },...
+        ]
+        """
+        if range_ is not None:
+            range_ = "-".join(str(r) for r in range_)
+        if is_deleted:
+            is_deleted = 1
+        if not get_hateoas:
+            get_hateoas = 0
+        request_parameters = self.__get_request_parameters(
+            rename={
+                "range_": "range",
+                "add_key_names": "add_keys_names",
+                "sort_by": "sort",
+            }
+        )
+        if filter_by:
+            for name in filter_by:
+                request_parameters.append((f"searchText[{name}]", filter_by[name]))
+        return self._get_json(f"{item_type}/", parameters=request_parameters)
+
+    def get_sub_items(
+        self,
+        item_type: str,
+        item_id: int,
+        sub_item_type: str,
+        expand_dropdowns: bool = False,
+        get_hateoas: bool = True,
+        only_id: bool = False,
+        range_: Tuple[int, int] = None,
+        sort_by: str = None,
+        order: SortOrder = None,
+        add_key_names: List[str] = None,
+    ) -> List[JSON]:
+        """Return a collection of subitems of the `sub_item_type` for the identified
+        `item_id`.
+
+        Parameters:
+        ----------
+
+        item_type: str
+            Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
+        item_id: int
+            Unique identifier of the parent `item_type`.
+        expand_dropdowns: bool, default False
+            Show dropdown name instead of `id`.
+        get_hateoas : bool, default True
+            Show relations of the item in a `links` attribute.
+            See: https://en.wikipedia.org/wiki/HATEOAS
+            Currently there seems to be a bug with this option.
+        only_id: bool, default False
+            Only `id` and `links` are returned.
+        range_: Tuple(int, int), default (0, 50)
+            The start and end of the pagination.
+        sort_by: str, default None
+            Name of the field to sort by.
+        order: SortOrder, default SortOrder.Ascending
+            Sort the results according to the sort order of the `sort` field.
+        add_key_names: List[str], default None
+            Retrieve friendly names of the keys "id" keys.
+            Eg.: ['id', 'entities_id', 'groups_id_tech' ...]
+
+        Example of :return::
+        [
+            {
+                "id": 22117,
+                "itemtype": "User",
+                ...
+            }, ...
+        ]"""
+        if range_ is not None:
+            range_ = "-".join(str(r) for r in range_)
+        if not get_hateoas:
+            get_hateoas = 0
+        request_parameters = self.__get_request_parameters(
+            rename={
+                "range_": "range",
+                "add_key_names": "add_keys_names",
+                "sort_by": "sort",
+            }
+        )
+        return self._get_json(
+            f"{item_type}/{item_id}/{sub_item_type}", parameters=request_parameters
+        )
+
+    def get_search_options(
+        self, item_type: str, raw: bool = False, pretty=False
+    ) -> JSON:
+        """List the search options of th provided `itemtype`. To use with
+        `search_items`.
+
+        Parameters:
+        ----------
+
+        item_type: str
+            Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
+        raw: bool, default False
+            return `searchoption` uncleaned (as provided by `core`)
+        pretty: bool, default False
+            Will attempt to return the search option organized in a tree based on `uid`
+
+        Example of :return::
+        {
+            "common": "Characteristics",
+             "1": {
+                 'name': 'Name'
+                 'table': 'glpi_computers'
+                 'field': 'name'
+                 'linkfield': 'name'
+                 'datatype': 'itemlink'
+                 'uid': 'Computer.name'
+             },...
+        }
+
+        Example `return` with pretty on::
+            {'Computer':
+                {'Appliance_Item':
+                    {'Appliance':
+                        {'ApplianceType':
+                            {'name':
+                                {'available_searchtypes':
+                                    ['contains', ...],
+                                ...
+                                'uid': 'Computer.Appliance_Item.Appliance.ApplianceType.name'
+                            },...
+                        },...
+                    },...
+                },...
+            }
+        """
+
+        def recurse_parts(
+            part_name: str, part_data: Dict[str, Any], rest: List[str], end, id_: int
+        ):
+            if part_name not in part_data:
+                part_data[part_name] = {}
+            if len(rest) == 0:
+                part_data[part_name] = end
+                end["id"] = id_
+                return
+            name = rest.pop(0)
+            recurse_parts(name, part_data[part_name], rest, end, id_)
+
+        request_parameters = self.__get_request_parameters()
+        json = self._get_json(
+            f"listSearchOptions/{item_type}", parameters=request_parameters
+        )
+        if not pretty:
+            return json
+        else:
+            result = {}
+            for k, v in json.items():
+                if k.isdecimal():
+                    parts = v["uid"].split(".")
+                    head = parts.pop(0)
+                    recurse_parts(head, result, parts, v, int(k))
+            return result
+
+    def search_items(
+        self,
+        item_type: str,
+        filters: List[Dict[str, Any]] = None,
+        sort_by_id: int = None,
+        order: SortOrder = None,
+        range_: Tuple[int, int] = None,
+        force_display: List[int] = None,
+        raw_data: bool = False,
+        with_indexes: bool = False,
+        uid_cols: bool = False,
+        give_items: bool = False,
+    ) -> JSON:
+        """
+        Expose the GLPI searchEngine and combine filters to retrieve a list of elements
+        of the specified `item_type`.
+
+        Note: you can use 'AllAssets' as the `item_type` to retrieve a combination of
+        all asset's items, regardless of type.
+
+        Parameters:
+        ----------
+
+        item_type: str
+            Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
+        filters: List[Dict[str, Any]], default None
+            A list of json-like objects the represents the query filters and their
+            their relationships.
+            Every filter object must have at least one `link` field (if it's not the
+            first object).
+                link: str
+                    A logical operator in AND, OR, AND NOT, AND NOT(?).
+            `Filter objects` keys are objects that narrow down the query their keys are:
+                field: int
+                    The id of the `search_option`.
+                meta: boolean
+                    "is this criterion a meta one ?"
+                itemtype: str
+                    For meta=true criterion, precise the `itemtype` to use.
+                searchtype: str
+                    The comparison operation of the filter. It's one of, contains[1],
+                    equals[2], notequals[2], lessthan, morethan, under, notunder.
+                value:
+                    The value that the `field` is compared against.
+            `Sub-filter` objects can be seen as a pair of () separating a query its
+            single unique key is:
+                criteria: List[Dict[str, Any]]
+                    A list of `Filter objects`
+            Example of `filters` parameter::
+                [
+                    {
+                       "field":      1,
+                       "searchtype": 'contains',
+                       "value":      ''
+                    }, {
+                       "link":       'AND',
+                       "field":      31,
+                       "searchtype": 'equals',
+                       "value":      1
+                    }, {
+                       "link":       'AND',
+                       "meta":       true,
+                       "itemtype":   'User',
+                       "field":      1,
+                       "searchtype": 'equals',
+                       "value":      1
+                    }, {
+                       "link":       'AND',
+                       "criteria" : [
+                          {
+                             "field":      34,
+                             "searchtype": 'equals',
+                             "value":      1
+                          }, {
+                             "link":       'OR',
+                             "field":      35,
+                             "searchtype": 'equals',
+                             "value":      1
+                          }
+                       ]
+                    }
+                ]
+                # This example can be read as the python expression:
+                # '' in field[1] and field[31] == 1 and User.field[1] == 1 and (
+                # field[34] == 1 or field[35] == 1)
+        sort_by_id: int, default None
+            `id` of the `search_option` to sort by.
+        order: SortOrder, default SortOrder.Ascending
+            Sort the results according to the sort order of the `sort` field.
+        range_: Tuple(int, int), default (0, 50)
+            The start and end of the pagination.
+        force_display: List[int], default None
+            If set only the columns listed will be present in the query result.
+
+            **Note**: The API documentation says that some columns will always be
+            displayed, those are `{1: id, 2: name, 80: Entity}`. However that's not the
+            observed behaviour. Only `{1: id}` seems to always be displayed.
+        raw_data: bool, default False
+            If set debug information about the query is returned in a `rawdata` field.
+            The results contain the SQL, the search filters as interpreted by the
+            `SearchEngine`, columns to retrive and many more attributes.
+        with_indexes: bool, default False
+            Instead of the resulting `data` field being a list of items found, it is
+            a `dict` with `id` as key. Ordering cannot work with this argument.
+        uid_cols: bool, default False
+            Replaces the numeric `id` from the resulting `data` object with human
+            readable names as identified by the `uid` field returned by
+            `get_search_options`.
+        give_items: bool, default False
+            Returns a HTML link to the item on the portal in the first field for each
+            returned item, inside a 'data_html' field in the returned object.
+            Example of :return::
+                {
+                    'content-range': '0-1/2',
+                    'count': 2,
+                    'data': [...],
+                    'data_html': [
+                        {
+                            '1': "<a id='Monitor_1_1' href='/front/monitor.form.php?id=1'>monitor1</a>",
+                            '19': '2021-02-20 21:38',
+                            '23': 'manufacturer1',
+                            ...
+                        }...
+                    ],...
+                }
+
+        Notes
+        -----
+
+        [1] - contains will use a wildcard search per default. You can restrict at the
+        beginning using the `^` character, and/or at the end using the `$` character.
+        [2] - `equals` and `notequals` are designed to be used with dropdowns. Do not
+        expect those operators to search for a strictly equal value (see [1] above).
+
+        Example of :return::
+
+        {
+            "totalcount": ":number_of_results_without_pagination",
+            "range": ":start_of_pagination-:end_of_pagination",
+            "data": [
+                {
+                    ":searchoptions_id": "value",
+                    ...
+                },...
+            ],
+            "rawdata": {
+                ...
+            },...
+        }
+
+        """
+        if range_ is not None:
+            range_ = "-".join(str(r) for r in range_)
+        criteria = filters if filters else []
+        filters = None
+        request_parameters = self.__get_request_parameters(
+            rename={
+                "sort_by_id": "sort",
+                "range_": "range",
+                "force_display": "forcedisplay",
+                "raw_data": "rawdata",
+                "with_indexes": "withindexes",
+                "give_items": "giveItems",
+            }
+        )
+        for i in range(len(criteria)):
+            for key, value in criteria[i].items():
+                request_parameters.append((f"criteria[{i}][{key}]", value))
+        json = self._get_json(f"search/{item_type}", parameters=request_parameters)
+        if not with_indexes:
+            for d in json.get("data", []):
+                self.__keys_to_int(d)
+            for d in json.get("data_html", []):
+                self.__keys_to_int(d)
+        return json
+
+    def add_items(
+        self, item_type: str, data: Union[JSON, List[JSON]]
+    ) -> Union[JSON, List[JSON]]:
+        """Add one or several objects
+
+        Parameters:
+        ----------
+
+        item_type: str
+            Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
+        data: Union[Dict, List[Dict]]
+            A dict with fields of `itemtype` to be inserted. You can add several items
+            in one action by passing a list of dict instead.
+
+        Return:
+        ------
+
+        In case a single object was passed will return a single dict, otherwise a
+        list of dicts.
+
+        In case of success the dicts might contain only the `id` of the inserted object,
+        otherwise it will contain a `message` field with the error message.
+
+        Example of return::
+
+        # For single objects
+
+        {'id': 4, 'message': 'Item Successfully Added: item name'}
+
+        # For several objects
+
+        [
+            {"id":8, "message": ""},
+            {"id":false, "message": "You don't have permission to perform this action."},
+            {"id":9, "message": ""}
+        ]
+
+        # Developer note:
+        # So far I've been unable to trigger an error with add_items for a single
+        # item in a list. add_items fail silently whenever you provide an invalid
+        # attribute ex: an attribute that references an object that doesn't exist, a
+        # duplicated id field or even when you try to set a field that doesn't exist.
+        """
+        response = self._do_post(f"{item_type}", data={"input": data})
+        return response.json()
+
+    def update_items(self, item_type: str, data: List[JSON]) -> List[JSON]:
+        """Update the attributes of several items.
+
+        Parameters:
+        -----------
+
+        item_type: str
+            Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
+        data: List[Dict[str, Any]]
+            A list of dict with fields of `itemtype` to be update. One of those fields
+            must be `id`.
+            Field names must be lowercase.
+
+        Return:
+        -------
+
+        Returns a list of objects in the form of `{'id': True, 'message': ''}`
+
+        In case of failure the `id` field value will be false and `message` will be set.
+
+        Developer note:
+        ---------------
+
+        As with the `add_items` method, this method is highly permissive and will not
+        return an error if the item with that `id` doesn't exist, or the field is
+        incorrect. In fact, it might create new objects in case the `id` doesn't exist.
+        """
+        response = self._do_method("patch", f"{item_type}", data={"input": data})
+        return response.json()
+
+    def delete_items(
+        self, item_type: str, ids: List[int], purge=False, log=True
+    ) -> List[JSON]:
+        """Delete a list of existing objects.
+
+        Parameters:
+        -----------
+
+        item_type: str
+            Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
+        ids: List[int]
+            List of ids of the objects that will be deleted.
+        purge: bool, default False
+            If set the item will skip the trash bin (if applicable), being immediately
+            deleted.
+        log: bool, default True
+            If set the deletion operation will be logged.
+
+        Return:
+        -------
+
+        Returns a list of objects in the form of `{'id': True, 'message': ''}`
+
+        In case of failure the `id` field value will be false and `message` will be set.
+        """
+        data = {"input": {"id": id_ for id_ in ids}}
+        if purge:
+            data["force_purge"] = True
+        if not log:
+            data["force_purge"] = True
+        response = self._do_method("delete", f"{item_type}", data=data)
+        return response.json()
+
+    def upload_document(self, file: IO, name: str = None, file_name: str = None):
+        """Uploads a document to GLPI
+
+        Parameters:
+        -----------
+
+        name: str, default None
+            The human readable name. If unset it will be the same as `file_name`.
+        file: IO
+            A file like object
+        file_name: str, default None
+            If you want the file uploaded to have a name different from the `file`
+            you can set this variable. Ex: 'my_filename.png'
+            If unset it will try to obtain a name from the `file` to use as the
+            `file_name`.
+        """
+        manifest = json.dumps({"input": {"name": name, "_filename": [file_name]}})
+
+        url = self._get_method_url("Document/")
+        headers = self._header_dict({"Session-Token": self.session_token})
+        if self.__session is None:
+            self.__session = requests.Session()
+        if file_name is None:
+            file_name = file.name
+        del headers["Content-Type"]
+        r = self.__session.post(
+            url,
+            headers=headers,
+            verify=self.verify_tls,
+            files={"filename[0]": (file_name, file)},
+            data={"uploadManifest": manifest},
+        )
+        r.raise_for_status()
+        return r.json()
+
+    def download_document(self, id_: int):
+        """Return a Document identified by `id` as `bytes`"""
+        response = self._do_method(
+            "get",
+            f"Document/{id_}",
+            headers={"Accept": "application/octet-stream"},
+            on_error_raise=False,
+        )
+        return response.content
+
+    def download_user_profile_picture(self, id_: int):
+        """Return the profile picture of a `User` identified by `id` as `bytes`"""
+        response = self._do_method(
+            "get",
+            f"User/{id_}/Picture",
+            on_error_raise=False,
+        )
+        if response.status_code == 204:
+            raise AttributeError("User doesn't have a profile picture")
+        return response.content

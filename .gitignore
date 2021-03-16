@@ -1,0 +1,4 @@
+/docker-stuff/database/
+/docker-stuff/webapp/
+.idea/
+docker-stuff/forensic_log
