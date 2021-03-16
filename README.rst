@@ -8,9 +8,9 @@ DISCLAIMER
 ==========
 
 GLPI API is quirky, some options don't work, some things aren't documented and the
-documentation doesn't always describes what the software does. Besides that GLPI is
-known to be prone to break a few things between updates. While I've done my best to
-shield the user from all of this with this library, sometimes unexpected errors will
+documentation doesn't always describes what the software actually does. Besides that
+GLPI is known to be prone to break a few things between updates. While I've done my best
+to shield the user from all of this with this library, sometimes unexpected errors will
 leak to the user. Please bear with me as we travel along this bumpy road.
 
 Getting the API to work
@@ -138,7 +138,9 @@ The usage is fairly straightforward:
 
 Please see the individual methods documentation for more.
 
-Example::
+Example:
+
+.. code-block:: python
 
     from glpilib2 import RequestHandler
     handler = RequestHandler(
