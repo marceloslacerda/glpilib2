@@ -28,10 +28,10 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install black pytest
         pip install .
-    - name: Lint with flake8
+    - name: Lint with black
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        black --check
+        black --check .
     - name: Test with pytest
       run: |
         pytest
