@@ -2,3 +2,8 @@
 /docker-stuff/webapp/
 .idea/
 docker-stuff/forensic_log
+__pycache__/
+venv/
+build/
+*.egg-info/
+*.swp

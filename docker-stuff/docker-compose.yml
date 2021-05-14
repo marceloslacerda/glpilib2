@@ -10,10 +10,10 @@ services:
   webapp:
     image: ghcr.io/glpi-project/glpi-nightly:master
     ports:
-      - 8000:80
+      - 127.0.0.1:8000:80
     volumes:
       - ./apache2.conf:/etc/apache2/apache2.conf
       - ./forensic_log:/var/log/httpd/forensic_log
-      - ./webapp:/var/www/glpi
+      - ./webapp:/var/www
     depends_on:
       - db
