@@ -38,4 +38,5 @@ jobs:
         ./bootstrap-run.sh
         cd ..
         ./run-test.sh
+        cd docker-stuff
         docker-compose down
