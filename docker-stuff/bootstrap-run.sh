@@ -12,6 +12,7 @@ docker-compose up -d
 until docker-compose exec -T db mysql -uroot -pexample --execute 'SELECT 1' ; do
     sleep 1
 done
+docker-compose exec -T db mysql -u root -pexample --execute 'CREATE DATABASE glpi;'
 docker-compose exec -T db mysql -u root -pexample glpi < database_dump.sql
 docker-compose exec -T -u www-data webapp php bin/console glpi:system:check_requirements
 docker-compose exec -T -u www-data webapp php bin/console glpi:maintenance:enable || true
