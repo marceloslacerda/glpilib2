@@ -9,7 +9,7 @@ touch forensic_log
 curl -s https://api.github.com/repos/glpi-project/glpi/releases/latest | grep browser_download_url | cut -d : -f 2,3 | tr -d \" | xargs curl -sL  | tar -xz
 mv glpi webapp
 docker-compose up -d
-until docker-compose exec -T db mysql -uroot -pexample glpi --execute 'SELECT 1' ; do
+until docker-compose exec -T db mysql -uroot -pexample --execute 'SELECT 1' ; do
     sleep 1
 done
 docker-compose exec -T db mysql -u root -pexample glpi < database_dump.sql
