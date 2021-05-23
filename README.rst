@@ -2,7 +2,7 @@
 GLPILIB2
 ========
 
-glpilib2 is an easy to use python library for interfacing with GLPI's API.
+glpilib2 is an easy to use python library for interfacing with `GLPI <https://github.com/glpi-project/glpi>`_'s API.
 
 
 Features
@@ -164,3 +164,8 @@ to shield the user from all of this with this library, sometimes unexpected erro
 leak to the user. Please bear with me as we travel along this bumpy road.
 
 .. _profile: https://wiki.glpi-project.org/doku.php?id=en:manual:admin:7_administration#profiles.
+
+License
+=======
+
+This project is licensed under the GPL-2.0 license.
