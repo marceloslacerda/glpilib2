@@ -2,18 +2,47 @@
 GLPILIB2
 ========
 
+glpilib2 is an easy to use python library for interfacing with GLPI's API.
 
 
-DISCLAIMER
-==========
+Features
+--------
 
-GLPI API is quirky, some options don't work, some things aren't documented and the
-documentation doesn't always describes what the software actually does. Besides that
-GLPI is known to be prone to break a few things between updates. While I've done my best
-to shield the user from all of this with this library, sometimes unexpected errors will
-leak to the user. Please bear with me as we travel along this bumpy road.
+* Lots of  tests for each API method
+* A comprehensive documentation that dwelves into unusual behaviors of GLPI's
+* Some obtuse errors that GLPI throws are wrapped with more meaningful ones
 
-Getting the API to work
+
+How to use
+----------
+
+The usage is fairly straightforward:
+
+#. Create an instance of the ``RequestHandler`` class.
+#. Initialize a session.
+#. Use the ``RequestHandler``'s methods.
+#. kill the session.
+
+Please see the individual methods documentation for more.
+
+**Example:**
+
+.. code-block:: python
+
+    from glpilib2 import RequestHandler
+    handler = RequestHandler(
+        host_url,
+        app_token,
+        user_api_token,
+    )
+    handler.init_session()
+    ticket = handler.get_item("Ticket", 1)
+    handler.delete_items("Software", [6])
+    handler.kill_session()
+
+Wondering how to fill those variables called ``host_url``, ``app_token`` or ``user_api_token``? Read along! 
+
+Getting GLPI API to work
 =======================
 
 GLPI can be a bit tricky to get it to work with the API. In brief you will need
@@ -93,7 +122,7 @@ Getting this value is far more straightforward than the previous one.
 Testing your settings
 ---------------------
 
-Now we should be almost done. Test that the you can access the api with the
+Now we should be almost done. You can test that the you can access the api with the
 parameters we just collected.
 
 Example::
@@ -111,8 +140,8 @@ Example::
 
 Source: https://github.com/glpi-project/glpi/blob/master/apirest.md#init-session
 
-If you got an answer ``200 OK`` as in the previous example skip to the
-final step.
+If you got an answer ``200 OK`` as in the previous example you are done and can plug the
+parameters you just collected to the library as mentioned on the `How to use`_ section.
 
 Otherwise there are a few things that might have gone wrong.
 Check the `documentation for common errors <https://github.com/glpi-project/glpi/blob/master/apirest.md#errors>`_.
@@ -125,32 +154,13 @@ with the authentication data. Check this
 And this `server configuration guide <https://github.com/glpi-project/glpi/blob/master/apirest.md#servers-configuration>`_
 for more info.
 
+DISCLAIMER
+==========
 
-Using the library
-=================
-
-The usage is fairly straightforward:
-
-#. create an instance of the ``RequestHandler`` class.
-#. Initialize a session.
-#. Use the ``RequestHandler``'s methods.
-#. kill the session.
-
-Please see the individual methods documentation for more.
-
-Example:
-
-.. code-block:: python
-
-    from glpilib2 import RequestHandler
-    handler = RequestHandler(
-        "http://localhost:8000",
-        os.environ["APP_TOKEN"],
-        os.environ["USER_API_TOKEN"],
-    )
-    handler.init_session()
-    ticket = handler.get_item("Ticket", 1)
-    handler.delete_items("Software", [6])
-    handler.kill_session()
+GLPI API is quirky, some options don't work, some things aren't documented and the
+documentation doesn't always describes what the software actually does. Besides that
+GLPI is known to be prone to break a few things between updates. While I've done my best
+to shield the user from all of this with this library, sometimes unexpected errors will
+leak to the user. Please bear with me as we travel along this bumpy road.
 
 .. _profile: https://wiki.glpi-project.org/doku.php?id=en:manual:admin:7_administration#profiles.
