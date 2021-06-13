@@ -10,9 +10,12 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+sys.path.insert(0, os.path.abspath('..'))
+
+
+import glpilib2
 
 
 # -- Project information -----------------------------------------------------
@@ -22,7 +25,8 @@ copyright = '2021, Marcelo Lacerda'
 author = 'Marcelo Lacerda'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1'
+release = glpilib2.__version__
+version = release
 
 
 # -- General configuration ---------------------------------------------------
@@ -31,6 +35,11 @@ release = '0.1'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.todo",
+    "sphinx.ext.viewcode",
+    "numpydoc",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -48,6 +57,23 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 html_theme = 'alabaster'
+add_module_names = True
+
+html_theme_options = {
+    "show_powered_by": False,
+    "github_user": "requests",
+    "github_repo": "requests",
+    "github_banner": True,
+    "show_related": False,
+    "note_bg": "#FFF59C",
+}
+
+html_use_smartypants = False
+
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3/", None),
+    "requests": ("https://docs.python-requests.org/en/master/", None),
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

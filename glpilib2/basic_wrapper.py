@@ -19,6 +19,9 @@ JSON = Dict[str, Any]
 
 
 class SortOrder(Enum):
+    """Handy class for ordering queries.
+    
+    """
     Ascending = "ASC"
     Descending = "DESC"
 
@@ -28,10 +31,22 @@ class SortOrder(Enum):
 
 @dataclass
 class ResponseRange:
-    """Some API methods produce a response in the header that describe the range of
+    """Range of a query.
+    
+    Some API methods produce a response in the header that describe the range of
     the query. That data is collected and wrapped in this type of object.
     To obtain it use the `response_range` property of RequestHandler.
-    """
+    
+    Attributes
+    ----------
+    start : int
+        The query was retrieved begining on the `start` number.
+    end: int
+        The query was retrieved with no elements after `end` number.
+    count: int
+        Number of items returned.
+    max: int
+        Maximum possible number of items for this item type."""
 
     start: int
     end: int
@@ -45,15 +60,24 @@ class ResponseRange:
 class RequestHandler:
     """RequestHandler encapsulates the GLPI API in a handy class.
 
-    Note: Most methods require an active session to perform. If unsure
+    Warnings
+    --------
+    Most methods require an active session to perform. If unsure
     call init_session() after the instantiation.
 
-    Example::
+    Examples
+    --------
 
-        >>> handler = RequestHandler('localhost', '123456', '654321')
-        >>> handler.init_session()
-        >>> my_profiles = handler.get_my_profiles()
-        >>> handler.kill_session()
+    >>> handler = RequestHandler('localhost', '123456', '654321')
+    >>> handler.init_session()
+    >>> handler.get_my_profiles()
+    {
+        'name': "Super-admin",
+        'entities': [
+            ...
+        ]
+    }
+    >>> handler.kill_session()
     """
 
     def __init__(
@@ -71,7 +95,9 @@ class RequestHandler:
         host_url, app_token and user_api_token are described in the module
         documentation.
 
-        Note: This method, doesn't call init_session(). See The class
+        Warning
+        -------
+        This method, doesn't call init_session(). See The class
         documentation for more information.
         """
         self.host_url = host_url
@@ -216,6 +242,7 @@ class RequestHandler:
 
     def kill_session(self, session_id: Optional[str] = None):
         """Destroy a session identified by a session token.
+
         Defaults to the current open session."""
         if session_id is None:
             if self.__session_token is None:
@@ -240,8 +267,10 @@ class RequestHandler:
 
     def get_my_profiles(self) -> List[JSON]:
         """Return all the profiles associated to logged user.
-        Example of :return::
 
+        Examples
+        --------
+        >>> handler.get_my_profiles()
         [
              {
                  'id': 1
@@ -256,21 +285,29 @@ class RequestHandler:
 
     def get_active_profile(self) -> JSON:
         """Return the current active profile.
-        Example of :return::
 
+        Examples
+        --------
+        >>> handler.get_active_profile()
         {
             'name': "Super-admin",
             'entities': [
                 ...
             ]
-        }"""
+        }
+        """
         return self._get_json("getActiveProfile")["active_profile"]
 
-    def change_active_profile(self, profile_id):
+    def change_active_profile(self, profile_id) -> None:
         """Change active profile to the one indicated by profile_id.
-        Use getMyProfiles to obtain the possible profiles.
 
-        :raises AttributeError: when the profile can't be found"""
+        Use self.getMyProfiles to obtain the possible profiles.
+
+        Raises
+        ------
+        AttributeError
+            When the profile can't be found.
+        """
         r = self._do_post(
             "changeActiveProfile", {"profiles_id": profile_id}, on_error_raise=False
         )
@@ -319,17 +356,22 @@ class RequestHandler:
         )
 
     def get_my_entities(self, recursive: bool = False) -> List[JSON]:
-        """Return all the possible entities of the current logged user (and for current
-        active profile).
-        Example of :return::
+        """Return all the possible entities of the current logged user
+        
+        Also returns entities related to the current
+        active profile.
 
+        Examples
+        --------
+        >>> handler.get_my_entities()
         [
             {
                 'id':   71
                 'name': "my_entity"
             },
             ...
-        ]"""
+        ]
+        """
         return self._get_json(
             "getMyEntities", parameters={"is_recursive": str(recursive).lower()}
         )["myentities"]
@@ -350,11 +392,14 @@ class RequestHandler:
         """
         return self._get_json("getActiveEntities")["active_entity"]
 
-    def change_active_entity(self, entity_id):
-        """Change active entity to the entity_id one. See get_my_entities endpoint for
-        possible entities.
+    def change_active_entity(self, entity_id: int):
+        """Change active entity to the `entity_id` one.
+        
+        Use self.get_my_entities method to know that are the viable entities.
 
-        Note that due to a bug with GLPI 9.5.3 if the API cannot find a valid entity
+        Warnings
+        --------
+        Due to a bug with GLPI 9.5.3 if the API cannot find a valid entity
         with that id it will just report a "Bad Request".
         """
         r = self._do_post(
@@ -364,11 +409,11 @@ class RequestHandler:
             raise AttributeError(r.json()[1])
 
     def get_full_session(self) -> JSON:
-        """
-        Return the current php $_SESSION.
+        """Return the current `php`'s `$_SESSION`.
 
-        Example of :return::
-
+        Examples
+        --------
+        >>> handler.get_full_session()
         {
             'valid_id': ...,
             'glpi_currenttime': ...,
@@ -381,8 +426,9 @@ class RequestHandler:
     def get_glpi_config(self) -> JSON:
         """Return the current $CFG_GLPI.
 
-        Example of :return::
-
+        Examples
+        --------
+        >>> handler.get_glpi_config()
         {
             'languages': ...,
             'glpitables': ...,
@@ -419,9 +465,8 @@ class RequestHandler:
 
         Documents and User pictures are retrieved with their respective methods.
 
-        Parameters:
-        -----------
-
+        Parameters
+        ----------
         item_type: str
             Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
         id_ : int
@@ -465,8 +510,9 @@ class RequestHandler:
             Retrieve friendly names of the keys "id" keys.
             Eg.: ['id', 'entities_id', 'groups_id_tech' ...]
 
-        Example of :return::
-
+        Examples
+        --------
+        >>> handler.get_item(item_type='Computer',id_=71)
         {
             "id": 71,
             "entities_id": "Root Entity",
@@ -495,11 +541,10 @@ class RequestHandler:
         is_deleted: bool = False,
         add_key_names: List[str] = None,
     ) -> List[JSON]:
-        """It returns a set of items identified by `item_type`
+        """Returns a set of items identified by `item_type`.
 
-        Parameters:
-        ----------
-
+        Parameters
+        -----------
         item_type: str
             Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
         expand_dropdowns: bool, default False
@@ -524,7 +569,9 @@ class RequestHandler:
             Eg.: ['id', 'entities_id', 'groups_id_tech' ...]
 
 
-        Example of :return::
+        Examples
+        --------
+        >>> handler.get_many_items(item_type='Computer')
         [
             {
                 "id": 34,
@@ -565,16 +612,17 @@ class RequestHandler:
         order: SortOrder = None,
         add_key_names: List[str] = None,
     ) -> List[JSON]:
-        """Return a collection of subitems of the `sub_item_type` for the identified
+        """Return subitems of the `sub_item_type` for the identified
         `item_id`.
 
-        Parameters:
-        ----------
-
+        Parameters
+        -----------
         item_type: str
             Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
         item_id: int
             Unique identifier of the parent `item_type`.
+        sub_item_type: str
+            The type of subitems you are trying to retrieve.
         expand_dropdowns: bool, default False
             Show dropdown name instead of `id`.
         get_hateoas : bool, default True
@@ -593,14 +641,17 @@ class RequestHandler:
             Retrieve friendly names of the keys "id" keys.
             Eg.: ['id', 'entities_id', 'groups_id_tech' ...]
 
-        Example of :return::
+        Examples
+        --------
+        >>> handler.get_sub_items(item_type='User', item_id=2, sub_item_type='Logs')
         [
             {
                 "id": 22117,
                 "itemtype": "User",
                 ...
             }, ...
-        ]"""
+        ]
+        """
         if range_ is not None:
             range_ = "-".join(str(r) for r in range_)
         if not get_hateoas:
@@ -619,20 +670,22 @@ class RequestHandler:
     def get_search_options(
         self, item_type: str, raw: bool = False, pretty=False
     ) -> JSON:
-        """List the search options of th provided `itemtype`. To use with
-        `search_items`.
+        """List the search options of the provided `itemtype`.
+        
+        This method provides the options you need for self.search_items.
 
-        Parameters:
-        ----------
-
+        Parameters
+        -----------
         item_type: str
             Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
         raw: bool, default False
-            return `searchoption` uncleaned (as provided by `core`)
+            Return `searchoption` uncleaned (as provided by `core`).
         pretty: bool, default False
-            Will attempt to return the search option organized in a tree based on `uid`
+            Will attempt to return the search option organized in a tree based on `uid`.
 
-        Example of :return::
+        Examples
+        --------
+        >>> handler.get_search_items('Computer')
         {
             "common": "Characteristics",
              "1": {
@@ -645,21 +698,21 @@ class RequestHandler:
              },...
         }
 
-        Example `return` with pretty on::
-            {'Computer':
-                {'Appliance_Item':
-                    {'Appliance':
-                        {'ApplianceType':
-                            {'name':
-                                {'available_searchtypes':
-                                    ['contains', ...],
-                                ...
-                                'uid': 'Computer.Appliance_Item.Appliance.ApplianceType.name'
-                            },...
+        >>> handler.get_search_items('Computer', pretty=True)
+        {'Computer':
+            {'Appliance_Item':
+                {'Appliance':
+                    {'ApplianceType':
+                        {'name':
+                            {'available_searchtypes':
+                                ['contains', ...],
+                            ...
+                            'uid': 'Computer.Appliance_Item.Appliance.ApplianceType.name'
                         },...
                     },...
                 },...
-            }
+            },...
+        }
         """
 
         def recurse_parts(
@@ -702,16 +755,13 @@ class RequestHandler:
         uid_cols: bool = False,
         give_items: bool = False,
     ) -> JSON:
-        """
+        """Search items according to some criteria.
+
         Expose the GLPI searchEngine and combine filters to retrieve a list of elements
         of the specified `item_type`.
 
-        Note: you can use 'AllAssets' as the `item_type` to retrieve a combination of
-        all asset's items, regardless of type.
-
-        Parameters:
-        ----------
-
+        Parameters
+        -----------
         item_type: str
             Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
         filters: List[Dict[str, Any]], default None
@@ -720,14 +770,14 @@ class RequestHandler:
             Every filter object must have at least one `link` field (if it's not the
             first object).
                 link: str
-                    A logical operator in AND, OR, AND NOT, AND NOT(?).
-            `Filter objects` keys are objects that narrow down the query their keys are:
+                    A logical operator of AND, OR, AND NOT
+            `Filter objects` keys are objects that narrow down the query. Their keys are:
                 field: int
                     The id of the `search_option`.
                 meta: boolean
-                    "is this criterion a meta one ?"
+                    is this criterion a meta one ?
                 itemtype: str
-                    For meta=true criterion, precise the `itemtype` to use.
+                    For meta=true criterion, define the `itemtype` to use.
                 searchtype: str
                     The comparison operation of the filter. It's one of, contains[1],
                     equals[2], notequals[2], lessthan, morethan, under, notunder.
@@ -737,43 +787,7 @@ class RequestHandler:
             single unique key is:
                 criteria: List[Dict[str, Any]]
                     A list of `Filter objects`
-            Example of `filters` parameter::
-                [
-                    {
-                       "field":      1,
-                       "searchtype": 'contains',
-                       "value":      ''
-                    }, {
-                       "link":       'AND',
-                       "field":      31,
-                       "searchtype": 'equals',
-                       "value":      1
-                    }, {
-                       "link":       'AND',
-                       "meta":       true,
-                       "itemtype":   'User',
-                       "field":      1,
-                       "searchtype": 'equals',
-                       "value":      1
-                    }, {
-                       "link":       'AND',
-                       "criteria" : [
-                          {
-                             "field":      34,
-                             "searchtype": 'equals',
-                             "value":      1
-                          }, {
-                             "link":       'OR',
-                             "field":      35,
-                             "searchtype": 'equals',
-                             "value":      1
-                          }
-                       ]
-                    }
-                ]
-                # This example can be read as the python expression:
-                # '' in field[1] and field[31] == 1 and User.field[1] == 1 and (
-                # field[34] == 1 or field[35] == 1)
+            An example of `filters` parameter can be found in the examples section.
         sort_by_id: int, default None
             `id` of the `search_option` to sort by.
         order: SortOrder, default SortOrder.Ascending
@@ -800,44 +814,97 @@ class RequestHandler:
         give_items: bool, default False
             Returns a HTML link to the item on the portal in the first field for each
             returned item, inside a 'data_html' field in the returned object.
-            Example of :return::
+
+        Notes
+        -----
+        1. contains will use a wildcard search per default. You can restrict at the
+        beginning using the `^` character, and/or at the end using the `$` character.
+        2. `equals` and `notequals` are designed to be used with dropdowns. Do not
+        expect those operators to search for a strictly equal value (see 1. above).
+        3. You can use 'AllAssets' as the `item_type` to retrieve a combination of
+        all asset's items, regardless of type.
+
+        Examples
+        --------
+        >>> handler.search_items("Monitor", range=(0,2))
+        {
+            "totalcount": "2",
+            "range": "0:2",
+            "data": [
                 {
-                    'content-range': '0-1/2',
-                    'count': 2,
-                    'data': [...],
-                    'data_html': [
+                    "searchoptions_id": "value",
+                    ...
+                },...
+            ],...
+        }
+
+        With `give_items`.
+
+        >>> handler.search_items("Monitor", give_items=True)
+        {
+                    "data": [...],
+                    "data_html": [
                         {
-                            '1': "<a id='Monitor_1_1' href='/front/monitor.form.php?id=1'>monitor1</a>",
-                            '19': '2021-02-20 21:38',
-                            '23': 'manufacturer1',
+                            "1": "<a id='Monitor_1_1' href='/front/monitor.form.php?id=1'>monitor1</a>",
+                            "19": "2021-02-20 21:38",
+                            "23": "manufacturer1",
                             ...
                         }...
                     ],...
                 }
 
-        Notes
-        -----
+        The next example demonstrates the usage of fiters with a nested filter.
 
-        [1] - contains will use a wildcard search per default. You can restrict at the
-        beginning using the `^` character, and/or at the end using the `$` character.
-        [2] - `equals` and `notequals` are designed to be used with dropdowns. Do not
-        expect those operators to search for a strictly equal value (see [1] above).
-
-        Example of :return::
-
+        >>> nested_filter = [
+        ...     {
+        ...         "field":      34,
+        ...         "searchtype": "equals",
+        ...         "value":      1
+        ...     }, {
+        ...         "link":       "OR",
+        ...         "field":      35,
+        ...         "searchtype": "equals",
+        ...         "value":      1
+        ...     }
+        ... ]
+        >>> filters = [
+        ...     {
+        ...         "link":       "AND',
+        ...         "field":      31,
+        ...         "searchtype": "equals",
+        ...         "value":      1
+        ...      }, {
+        ...         "link":       "AND",
+        ...         "meta":       True,
+        ...         "itemtype":   "User",
+        ...         "field":      1,
+        ...         "searchtype": "equals",
+        ...         "value":      1
+        ...      }, {
+        ...         "link":       "AND",
+        ...         "criteria" : nested_filter
+        ...      }
+        ... ]
+        >>> handler.search_items("Monitor", force_display=[1], filters=filters)
         {
-            "totalcount": ":number_of_results_without_pagination",
-            "range": ":start_of_pagination-:end_of_pagination",
+            "totalcount": ...,
+            "range": ...,
             "data": [
                 {
-                    ":searchoptions_id": "value",
-                    ...
+                    "1": "W2242",...
                 },...
-            ],
-            "rawdata": {
-                ...
-            },...
+            ],...
         }
+
+        The above filter variable is roughly equivalent to the expression.
+        
+        >>> [m for m in Monitors if (
+        ...        field[31] == 1 
+        ...        and User.field[1] == 1
+        ...        and (
+        ...            field[34] == 1
+        ...            or field[35] == 1))]
+
 
         """
         if range_ is not None:
@@ -868,45 +935,51 @@ class RequestHandler:
     def add_items(
         self, item_type: str, data: Union[JSON, List[JSON]]
     ) -> Union[JSON, List[JSON]]:
-        """Add one or several objects
+        """Add one or several items
 
-        Parameters:
+        Parameters
         ----------
-
         item_type: str
             Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
         data: Union[Dict, List[Dict]]
             A dict with fields of `itemtype` to be inserted. You can add several items
             in one action by passing a list of dict instead.
 
-        Return:
-        ------
+        Returns
+        -------
+        Union[Dict, List[Dict]]
+            In case a single object was passed will return a single dict, otherwise a
+            list of dicts.
 
-        In case a single object was passed will return a single dict, otherwise a
-        list of dicts.
+            In case of success the dicts might contain only the `id` of the inserted object,
+            otherwise it will contain a `message` field with the error message.
 
-        In case of success the dicts might contain only the `id` of the inserted object,
-        otherwise it will contain a `message` field with the error message.
-
-        Example of return::
-
-        # For single objects
-
+        Examples
+        --------
+        >>> handler.add_items("Software", {"name": "my software", "location": 1})
         {'id': 4, 'message': 'Item Successfully Added: item name'}
 
-        # For several objects
+        For several objects.
 
+        >>> handler.add_items(
+        ... "Software",
+        ... [
+        ...     {"name": "second software added", "location": 1},
+        ...     {"name": "third software added", "uuid": "2313"},
+        ... ])
         [
             {"id":8, "message": ""},
             {"id":false, "message": "You don't have permission to perform this action."},
             {"id":9, "message": ""}
         ]
 
-        # Developer note:
-        # So far I've been unable to trigger an error with add_items for a single
-        # item in a list. add_items fail silently whenever you provide an invalid
-        # attribute ex: an attribute that references an object that doesn't exist, a
-        # duplicated id field or even when you try to set a field that doesn't exist.
+        Notes
+        -----
+        So far I've been unable to trigger an error with add_items for a single
+        item in a list. add_items fail silently whenever you provide an invalid
+        attribute ex: an attribute that references an object that doesn't exist, a
+        duplicated id field or even when you try to set a field that doesn't exist.
+
         """
         response = self._do_post(f"{item_type}", data={"input": data})
         return response.json()
@@ -914,9 +987,8 @@ class RequestHandler:
     def update_items(self, item_type: str, data: List[JSON]) -> List[JSON]:
         """Update the attributes of several items.
 
-        Parameters:
+        Parameters
         -----------
-
         item_type: str
             Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
         data: List[Dict[str, Any]]
@@ -924,19 +996,17 @@ class RequestHandler:
             must be `id`.
             Field names must be lowercase.
 
-        Return:
+        Returns
         -------
-
-        Returns a list of objects in the form of `{'id': True, 'message': ''}`
-
-        In case of failure the `id` field value will be false and `message` will be set.
-
-        Developer note:
-        ---------------
-
+        List[Dict]
+            Each field has the form `{'id': 2, 'message': ''}`
+        
+        Notes
+        -----
         As with the `add_items` method, this method is highly permissive and will not
         return an error if the item with that `id` doesn't exist, or the field is
         incorrect. In fact, it might create new objects in case the `id` doesn't exist.
+
         """
         response = self._do_method("patch", f"{item_type}", data={"input": data})
         return response.json()
@@ -946,9 +1016,8 @@ class RequestHandler:
     ) -> List[JSON]:
         """Delete a list of existing objects.
 
-        Parameters:
+        Parameters
         -----------
-
         item_type: str
             Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
         ids: List[int]
@@ -959,12 +1028,13 @@ class RequestHandler:
         log: bool, default True
             If set the deletion operation will be logged.
 
-        Return:
+        Returns
         -------
-
+        List[Dict]
         Returns a list of objects in the form of `{'id': True, 'message': ''}`
 
         In case of failure the `id` field value will be false and `message` will be set.
+
         """
         data = {"input": {"id": id_ for id_ in ids}}
         if purge:
@@ -977,7 +1047,7 @@ class RequestHandler:
     def upload_document(self, file: IO, name: str = None, file_name: str = None):
         """Uploads a document to GLPI
 
-        Parameters:
+        Parameters
         -----------
 
         name: str, default None
@@ -989,6 +1059,7 @@ class RequestHandler:
             you can set this variable. Ex: 'my_filename.png'
             If unset it will try to obtain a name from the `file` to use as the
             `file_name`.
+        
         """
         manifest = json.dumps({"input": {"name": name, "_filename": [file_name]}})
 
