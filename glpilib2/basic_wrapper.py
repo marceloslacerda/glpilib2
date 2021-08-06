@@ -19,8 +19,13 @@ JSON = Dict[str, Any]
 
 
 class SortOrder(Enum):
-    """Handy class for ordering queries.
+    """Handy :class:`~enum.Enum` for ordering queries.
     
+    Attributes
+    ----------
+
+    Ascending
+    Desceding
     """
     Ascending = "ASC"
     Descending = "DESC"
@@ -35,18 +40,20 @@ class ResponseRange:
     
     Some API methods produce a response in the header that describe the range of
     the query. That data is collected and wrapped in this type of object.
-    To obtain it use the `response_range` property of RequestHandler.
+    To obtain it use the :meth:`~RequestHandler.response_range`
+    property of :class:`RequestHandler`.
     
     Attributes
     ----------
-    start : int
+    start: int
         The query was retrieved begining on the `start` number.
     end: int
         The query was retrieved with no elements after `end` number.
     count: int
         Number of items returned.
     max: int
-        Maximum possible number of items for this item type."""
+        Maximum possible number of items for this item type.
+    """
 
     start: int
     end: int
@@ -60,10 +67,25 @@ class ResponseRange:
 class RequestHandler:
     """RequestHandler encapsulates the GLPI API in a handy class.
 
-    Warnings
-    --------
+    Parameters
+    ----------
+    host_url: str
+        The URL to the GLPI instance.
+    app_token: str
+        The application token.
+    user_api_token: str
+        The user api token.
+    verify_tls: bool, default True
+        If your glpi server is using TLS with a bad
+        certificate, you will need to set this to false.
+
+    Notes
+    -----
     Most methods require an active session to perform. If unsure
-    call init_session() after the instantiation.
+    call :meth:`~RequestHandler.init_session` after the instantiation.
+
+    `host_url`, `app_token` and `user_api_token` are further described in
+    the README.md.
 
     Examples
     --------
@@ -80,6 +102,44 @@ class RequestHandler:
     >>> handler.kill_session()
     """
 
+    @property
+    def response_range(self) -> ResponseRange:
+        """Set when methods that return multiple items are called.
+        
+        """
+        if self.__response_header is None:
+            raise AttributeError("No request made")
+        elif (
+            "Content-Range" not in self.__response_header
+            or "Accept-Range" not in self.__response_header
+        ):
+            raise AttributeError("The previous request did not return a range")
+        else:
+            content_range = self.__response_header["Content-Range"]
+            match = re.match(
+                r"(?P<start>\d+)-(?P<end>\d+)/(?P<count>\d+)", content_range
+            )
+            s = self.__response_header["Accept-Range"].strip().split()[1]
+            accept_range = int(s)
+            return ResponseRange(
+                int(match.group("start")),
+                int(match.group("end")),
+                int(match.group("count")),
+                accept_range,
+            )
+
+    @property
+    def session_token(self) -> str:
+        """Identification token used for the current connection to the API.
+        
+        """
+        if self.__session_token is None:
+            raise AttributeError(
+                "Request handler was not initiated! Please call init_session"
+                "if you want to start a new session."
+            )
+        return self.__session_token
+
     def __init__(
         self,
         host_url: str,
@@ -89,16 +149,11 @@ class RequestHandler:
     ):
         """Creates a new RequestHandler instance.
 
-        :param verify_tls: If your glpi server is using tls with a bad
-                           certificate, you will need to set this to false.
-
-        host_url, app_token and user_api_token are described in the module
-        documentation.
-
-        Warning
-        -------
+        Notes
+        -----
         This method, doesn't call init_session(). See The class
         documentation for more information.
+
         """
         self.host_url = host_url
         self.app_token = app_token
@@ -117,7 +172,10 @@ class RequestHandler:
         return d
 
     def init_session(self):
-        """Request a session token to uses other API endpoints."""
+        """Request a :meth:`~RequestHandler.session_token` to be used by the
+        other methods.
+        
+        """
         if self.__session_token is not None:
             raise AttributeError("Session already initialized.")
         auth = f"user_token {self.user_api_token}"
@@ -183,8 +241,11 @@ class RequestHandler:
         """Build request parameters as list of tuples out of the optional
         values of the calling method.
 
-        :parameter rename Renames the resulting parameter using the items of
-        this dict."""
+        Parameters
+        ----------
+        rename
+            Renames the resulting parameter using the items of this dict.
+        """
         if rename is None:
             rename = {}
         currentframe = inspect.currentframe()
@@ -217,31 +278,9 @@ class RequestHandler:
         finally:
             del currentframe
 
-    @property
-    def response_range(self) -> ResponseRange:
-        if self.__response_header is None:
-            raise AttributeError("No request made")
-        elif (
-            "Content-Range" not in self.__response_header
-            or "Accept-Range" not in self.__response_header
-        ):
-            raise AttributeError("The previous request did not return a range")
-        else:
-            content_range = self.__response_header["Content-Range"]
-            match = re.match(
-                r"(?P<start>\d+)-(?P<end>\d+)/(?P<count>\d+)", content_range
-            )
-            s = self.__response_header["Accept-Range"].strip().split()[1]
-            accept_range = int(s)
-            return ResponseRange(
-                int(match.group("start")),
-                int(match.group("end")),
-                int(match.group("count")),
-                accept_range,
-            )
-
     def kill_session(self, session_id: Optional[str] = None):
-        """Destroy a session identified by a session token.
+        """Destroy a session identified by a
+        :meth:`~RequestHandler.session_token`.
 
         Defaults to the current open session."""
         if session_id is None:
@@ -255,15 +294,6 @@ class RequestHandler:
         else:
             self._do_get("killSession", {"Session-Token": session_id})
         logger.info("Session was terminated successfully.")
-
-    @property
-    def session_token(self) -> str:
-        if self.__session_token is None:
-            raise AttributeError(
-                "Request handler was not initiated! Please call init_session"
-                "if you want to start a new session."
-            )
-        return self.__session_token
 
     def get_my_profiles(self) -> List[JSON]:
         """Return all the profiles associated to logged user.
@@ -298,10 +328,11 @@ class RequestHandler:
         """
         return self._get_json("getActiveProfile")["active_profile"]
 
-    def change_active_profile(self, profile_id) -> None:
-        """Change active profile to the one indicated by profile_id.
+    def change_active_profile(self, profile_id: int) -> None:
+        """Change active profile to the one indicated by `profile_id`.
 
-        Use self.getMyProfiles to obtain the possible profiles.
+        Use :meth:`~RequestHandler.get_my_profiles` to obtain the possible
+        profiles.
 
         Raises
         ------
@@ -356,10 +387,9 @@ class RequestHandler:
         )
 
     def get_my_entities(self, recursive: bool = False) -> List[JSON]:
-        """Return all the possible entities of the current logged user
+        """Return all the entities of the current logged user.
         
-        Also returns entities related to the current
-        active profile.
+        Also returns entities related to the current active profile.
 
         Examples
         --------
@@ -379,8 +409,9 @@ class RequestHandler:
     def get_active_entities(self) -> JSON:
         """Return active entities of current logged user.
 
-        Example of :return::
-
+        Examples
+        --------
+        >>> handler.get_active_entities()
         {
             'id': 1,
             'active_entity_recursive': true,
@@ -393,9 +424,9 @@ class RequestHandler:
         return self._get_json("getActiveEntities")["active_entity"]
 
     def change_active_entity(self, entity_id: int):
-        """Change active entity to the `entity_id` one.
+        """Change active entity to `entity_id`.
         
-        Use self.get_my_entities method to know that are the viable entities.
+        Use :meth:`~RequestHandler.get_my_entities` method to know that are the viable entities.
 
         Warnings
         --------
@@ -424,7 +455,7 @@ class RequestHandler:
         return self._get_json("getFullSession")["session"]
 
     def get_glpi_config(self) -> JSON:
-        """Return the current $CFG_GLPI.
+        """Return the current `$CFG_GLPI`.
 
         Examples
         --------
@@ -475,7 +506,10 @@ class RequestHandler:
             Show dropdown name instead of `id`.
         get_hateoas : bool, default True
             Show relations of the item in a `links` attribute.
+
             See: https://en.wikipedia.org/wiki/HATEOAS
+
+            Can't be disabled due to a bug in the API.
         get_sha1 : bool, default False
             Get a sha1 signature instead of the full answer.
         with_devices : bool, default False
@@ -551,7 +585,10 @@ class RequestHandler:
             Show dropdown name instead of `id`.
         get_hateoas : bool, default True
             Show relations of the item in a `links` attribute.
+            
             See: https://en.wikipedia.org/wiki/HATEOAS
+
+            Can't be disabled due to a bug in the API.
         only_id: bool, default False
             Only `id` and `links` are returned.
         range_: Tuple(int, int), default (0, 50)
@@ -562,7 +599,7 @@ class RequestHandler:
             Sort the results according to the sort order of the `sort` field.
         filter_by: Dict[str, str], default None
             Filters to pass on the query.
-        is_deleted: bool (default: false):
+        is_deleted: bool, default False
             Return deleted elements.
         add_key_names: List[str], default None
             Retrieve friendly names of the keys "id" keys.
@@ -627,8 +664,10 @@ class RequestHandler:
             Show dropdown name instead of `id`.
         get_hateoas : bool, default True
             Show relations of the item in a `links` attribute.
+            
             See: https://en.wikipedia.org/wiki/HATEOAS
-            Currently there seems to be a bug with this option.
+
+            Can't be disabled due to a bug in the API.
         only_id: bool, default False
             Only `id` and `links` are returned.
         range_: Tuple(int, int), default (0, 50)
@@ -763,7 +802,7 @@ class RequestHandler:
         Parameters
         -----------
         item_type: str
-            Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
+            Type of the item. Eg: 'Computer', 'Ticket', 'Software'...[3]
         filters: List[Dict[str, Any]], default None
             A list of json-like objects the represents the query filters and their
             their relationships.
@@ -771,6 +810,7 @@ class RequestHandler:
             first object).
                 link: str
                     A logical operator of AND, OR, AND NOT
+        
             `Filter objects` keys are objects that narrow down the query. Their keys are:
                 field: int
                     The id of the `search_option`.
@@ -783,10 +823,12 @@ class RequestHandler:
                     equals[2], notequals[2], lessthan, morethan, under, notunder.
                 value:
                     The value that the `field` is compared against.
+
             `Sub-filter` objects can be seen as a pair of () separating a query its
             single unique key is:
                 criteria: List[Dict[str, Any]]
                     A list of `Filter objects`
+            
             An example of `filters` parameter can be found in the examples section.
         sort_by_id: int, default None
             `id` of the `search_option` to sort by.
@@ -800,6 +842,7 @@ class RequestHandler:
             **Note**: The API documentation says that some columns will always be
             displayed, those are `{1: id, 2: name, 80: Entity}`. However that's not the
             observed behaviour. Only `{1: id}` seems to always be displayed.
+        
         raw_data: bool, default False
             If set debug information about the query is returned in a `rawdata` field.
             The results contain the SQL, the search filters as interpreted by the
@@ -819,8 +862,10 @@ class RequestHandler:
         -----
         1. contains will use a wildcard search per default. You can restrict at the
         beginning using the `^` character, and/or at the end using the `$` character.
+
         2. `equals` and `notequals` are designed to be used with dropdowns. Do not
         expect those operators to search for a strictly equal value (see 1. above).
+
         3. You can use 'AllAssets' as the `item_type` to retrieve a combination of
         all asset's items, regardless of type.
 

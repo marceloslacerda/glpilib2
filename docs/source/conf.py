@@ -61,9 +61,9 @@ add_module_names = True
 
 html_theme_options = {
     "show_powered_by": False,
-    "github_user": "requests",
-    "github_repo": "requests",
-    "github_banner": True,
+    "github_user": "marceloslacerda",
+    "github_repo": "glpi",
+    "github_banner": False,
     "show_related": False,
     "note_bg": "#FFF59C",
 }
@@ -74,6 +74,10 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "requests": ("https://docs.python-requests.org/en/master/", None),
 }
+
+autodoc_typehints = 'none'
+autodoc_member_order = 'bysource'
+numpydoc_show_class_members = True
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
