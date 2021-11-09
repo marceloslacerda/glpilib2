@@ -12,6 +12,12 @@ Features
 * A comprehensive documentation that dwelves into unusual behaviors of GLPI's
 * Some obtuse errors that GLPI throws are wrapped with more meaningful ones
 
+How to install
+--------------
+
+.. code-block:: bash
+    pip install git+https://github.com/marceloslacerda/glpi.git
+
 
 How to use
 ----------
