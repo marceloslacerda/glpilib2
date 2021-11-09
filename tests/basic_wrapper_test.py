@@ -474,6 +474,14 @@ class TestGLPIWrapper(unittest.TestCase):
         self.assertIn(str(id_), results[0])
         result = self.handler.get_item("Software", id_)
         self.assertEqual(result["id"], id_)
+    
+
+    def test_delete_items(self):
+        results = self.handler.delete_items("Software", [999])
+        self.assertLength(results, 1)
+        self.assertIn(str(id_), results[0])
+        result = self.handler.get_item("Software", id_)
+        self.assertEqual(result["id"], id_)
 
     def test_delete_items_purge(self):
         id_ = self.handler.add_items(
