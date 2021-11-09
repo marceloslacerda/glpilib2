@@ -1,0 +1,1250 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>glpilib2.basic_wrapper &#8212; glpilib2 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for glpilib2.basic_wrapper</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">json</span> <span class="kn">import</span> <span class="n">JSONDecodeError</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">IO</span>
+
+<span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
+    <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2">: </span><span class="si">%(name)s</span><span class="s2">: </span><span class="si">%(levelname)s</span><span class="s2">: </span><span class="si">%(message)s</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;glpi_wrapper&quot;</span><span class="p">)</span>
+
+<span class="n">JSON</span> <span class="o">=</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="SortOrder"><a class="viewcode-back" href="../../api.html#glpilib2.SortOrder">[docs]</a><span class="k">class</span> <span class="nc">SortOrder</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handy :class:`~enum.Enum` for ordering queries.</span>
+<span class="sd">    </span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    Ascending</span>
+<span class="sd">    Desceding</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Ascending</span> <span class="o">=</span> <span class="s2">&quot;ASC&quot;</span>
+    <span class="n">Descending</span> <span class="o">=</span> <span class="s2">&quot;DESC&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="ResponseRange"><a class="viewcode-back" href="../../api.html#glpilib2.ResponseRange">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">ResponseRange</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Range of a query.</span>
+<span class="sd">    </span>
+<span class="sd">    Some API methods produce a response in the header that describe the range of</span>
+<span class="sd">    the query. That data is collected and wrapped in this type of object.</span>
+<span class="sd">    To obtain it use the :meth:`~RequestHandler.response_range`</span>
+<span class="sd">    property of :class:`RequestHandler`.</span>
+<span class="sd">    </span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start: int</span>
+<span class="sd">        The query was retrieved begining on the `start` number.</span>
+<span class="sd">    end: int</span>
+<span class="sd">        The query was retrieved with no elements after `end` number.</span>
+<span class="sd">    count: int</span>
+<span class="sd">        Number of items returned.</span>
+<span class="sd">    max: int</span>
+<span class="sd">        Maximum possible number of items for this item type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">start</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">end</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="nb">max</span><span class="p">:</span> <span class="nb">int</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">)</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="si">}</span><span class="s2"> Max: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="RequestHandler"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler">[docs]</a><span class="k">class</span> <span class="nc">RequestHandler</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;RequestHandler encapsulates the GLPI API in a handy class.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    host_url: str</span>
+<span class="sd">        The URL to the GLPI instance.</span>
+<span class="sd">    app_token: str</span>
+<span class="sd">        The application token.</span>
+<span class="sd">    user_api_token: str</span>
+<span class="sd">        The user api token.</span>
+<span class="sd">    verify_tls: bool, default True</span>
+<span class="sd">        If your glpi server is using TLS with a bad</span>
+<span class="sd">        certificate, you will need to set this to false.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Most methods require an active session to perform. If unsure</span>
+<span class="sd">    call :meth:`~RequestHandler.init_session` after the instantiation.</span>
+
+<span class="sd">    `host_url`, `app_token` and `user_api_token` are further described in</span>
+<span class="sd">    the README.md.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; handler = RequestHandler(&#39;localhost&#39;, &#39;123456&#39;, &#39;654321&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; handler.init_session()</span>
+<span class="sd">    &gt;&gt;&gt; handler.get_my_profiles()</span>
+<span class="sd">    {</span>
+<span class="sd">        &#39;name&#39;: &quot;Super-admin&quot;,</span>
+<span class="sd">        &#39;entities&#39;: [</span>
+<span class="sd">            ...</span>
+<span class="sd">        ]</span>
+<span class="sd">    }</span>
+<span class="sd">    &gt;&gt;&gt; handler.kill_session()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">response_range</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ResponseRange</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Set when methods that return multiple items are called.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__response_header</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;No request made&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span>
+            <span class="s2">&quot;Content-Range&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__response_header</span>
+            <span class="ow">or</span> <span class="s2">&quot;Accept-Range&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__response_header</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;The previous request did not return a range&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">content_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__response_header</span><span class="p">[</span><span class="s2">&quot;Content-Range&quot;</span><span class="p">]</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span>
+                <span class="sa">r</span><span class="s2">&quot;(?P&lt;start&gt;\d+)-(?P&lt;end&gt;\d+)/(?P&lt;count&gt;\d+)&quot;</span><span class="p">,</span> <span class="n">content_range</span>
+            <span class="p">)</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__response_header</span><span class="p">[</span><span class="s2">&quot;Accept-Range&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">accept_range</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">ResponseRange</span><span class="p">(</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;start&quot;</span><span class="p">)),</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;end&quot;</span><span class="p">)),</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;count&quot;</span><span class="p">)),</span>
+                <span class="n">accept_range</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">session_token</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Identification token used for the current connection to the API.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__session_token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                <span class="s2">&quot;Request handler was not initiated! Please call init_session&quot;</span>
+                <span class="s2">&quot;if you want to start a new session.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__session_token</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">host_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">app_token</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">user_api_token</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">verify_tls</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new RequestHandler instance.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This method, doesn&#39;t call init_session(). See The class</span>
+<span class="sd">        documentation for more information.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">host_url</span> <span class="o">=</span> <span class="n">host_url</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app_token</span> <span class="o">=</span> <span class="n">app_token</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user_api_token</span> <span class="o">=</span> <span class="n">user_api_token</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__session_token</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verify_tls</span> <span class="o">=</span> <span class="n">verify_tls</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__session</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__response_header</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_header_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extra</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;App-Token&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_token</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">extra</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">d</span>
+
+<div class="viewcode-block" id="RequestHandler.init_session"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.init_session">[docs]</a>    <span class="k">def</span> <span class="nf">init_session</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Request a :meth:`~RequestHandler.session_token` to be used by the</span>
+<span class="sd">        other methods.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__session_token</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Session already initialized.&quot;</span><span class="p">)</span>
+        <span class="n">auth</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;user_token </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">user_api_token</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_get</span><span class="p">(</span><span class="s2">&quot;initSession&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="n">auth</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__session_token</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;session_token&quot;</span><span class="p">]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Session initiaded&quot;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_method_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">host_url</span><span class="si">}</span><span class="s2">/apirest.php/</span><span class="si">{</span><span class="n">request_type</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_do_get</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">header</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">parameters</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">requests</span><span class="o">.</span><span class="n">Response</span><span class="p">:</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_method_url</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_dict</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Calling method </span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__session</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">verify</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verify_tls</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__response_header</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span>
+        <span class="n">r</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">r</span>
+
+    <span class="k">def</span> <span class="nf">_get_json</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">parameters</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">JSON</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">JSON</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">JSON</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">JSON</span><span class="p">]]:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_get</span><span class="p">(</span>
+            <span class="n">method</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;Session-Token&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_token</span><span class="p">},</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">data</span>
+        <span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">JSONDecodeError</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;The API method </span><span class="si">%s</span><span class="s2"> produced a blank response.&quot;</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="s2">&quot;Failed to decode the method </span><span class="si">%s</span><span class="s2">&#39;s response as a JSON: </span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s2"> ...&quot;</span><span class="p">,</span>
+                    <span class="n">method</span><span class="p">,</span>
+                    <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">[:</span><span class="mi">100</span><span class="p">],</span>
+                <span class="p">)</span>
+            <span class="k">raise</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__keys_to_int</span><span class="p">(</span><span class="n">dict_</span><span class="p">:</span> <span class="n">Dict</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">dict_</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+                <span class="k">del</span> <span class="n">dict_</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                <span class="n">dict_</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">__get_request_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rename</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Build request parameters as list of tuples out of the optional</span>
+<span class="sd">        values of the calling method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        rename</span>
+<span class="sd">            Renames the resulting parameter using the items of this dict.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">rename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rename</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">currentframe</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getouterframes</span><span class="p">(</span><span class="n">currentframe</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">method</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="o">.</span><span class="n">function</span><span class="p">)</span>
+                <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+                <span class="n">request_parameters</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="n">parameter_name</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">name</span>
+                    <span class="n">parameter_value</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">f_locals</span><span class="p">[</span><span class="n">parameter_name</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">parameter_name</span> <span class="ow">in</span> <span class="n">rename</span><span class="p">:</span>
+                        <span class="n">parameter_name</span> <span class="o">=</span> <span class="n">rename</span><span class="p">[</span><span class="n">parameter_name</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="p">(</span>
+                        <span class="n">parameter</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">empty</span>
+                        <span class="ow">and</span> <span class="n">parameter_value</span> <span class="o">!=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">default</span>
+                    <span class="p">):</span>
+                        <span class="k">if</span> <span class="p">(</span>
+                            <span class="nb">type</span><span class="p">(</span><span class="n">parameter_value</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span>
+                            <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">parameter_value</span><span class="p">)</span> <span class="o">==</span> <span class="nb">tuple</span>
+                        <span class="p">):</span>
+                            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">parameter_value</span><span class="p">:</span>
+                                <span class="n">request_parameters</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">parameter_name</span> <span class="o">+</span> <span class="s2">&quot;[]&quot;</span><span class="p">,</span> <span class="n">item</span><span class="p">))</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">request_parameters</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">parameter_name</span><span class="p">,</span> <span class="n">parameter_value</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">request_parameters</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">frame</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">currentframe</span>
+
+<div class="viewcode-block" id="RequestHandler.kill_session"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.kill_session">[docs]</a>    <span class="k">def</span> <span class="nf">kill_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Destroy a session identified by a</span>
+<span class="sd">        :meth:`~RequestHandler.session_token`.</span>
+
+<span class="sd">        Defaults to the current open session.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">session_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__session_token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                    <span class="s2">&quot;Request handler was not initiated, nothing to be done.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_do_get</span><span class="p">(</span><span class="s2">&quot;killSession&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;Session-Token&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_token</span><span class="p">})</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__session_token</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_do_get</span><span class="p">(</span><span class="s2">&quot;killSession&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;Session-Token&quot;</span><span class="p">:</span> <span class="n">session_id</span><span class="p">})</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Session was terminated successfully.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RequestHandler.get_my_profiles"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.get_my_profiles">[docs]</a>    <span class="k">def</span> <span class="nf">get_my_profiles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">JSON</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return all the profiles associated to logged user.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; handler.get_my_profiles()</span>
+<span class="sd">        [</span>
+<span class="sd">             {</span>
+<span class="sd">                 &#39;id&#39;: 1</span>
+<span class="sd">                 &#39;name&#39;: &quot;Super-admin&quot;,</span>
+<span class="sd">                 &#39;entities&#39;: [</span>
+<span class="sd">                         ...</span>
+<span class="sd">                 ]...</span>
+<span class="sd">            },...</span>
+<span class="sd">        ]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_json</span><span class="p">(</span><span class="s2">&quot;getMyProfiles&quot;</span><span class="p">)[</span><span class="s2">&quot;myprofiles&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="RequestHandler.get_active_profile"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.get_active_profile">[docs]</a>    <span class="k">def</span> <span class="nf">get_active_profile</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JSON</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the current active profile.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; handler.get_active_profile()</span>
+<span class="sd">        {</span>
+<span class="sd">            &#39;name&#39;: &quot;Super-admin&quot;,</span>
+<span class="sd">            &#39;entities&#39;: [</span>
+<span class="sd">                ...</span>
+<span class="sd">            ]</span>
+<span class="sd">        }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_json</span><span class="p">(</span><span class="s2">&quot;getActiveProfile&quot;</span><span class="p">)[</span><span class="s2">&quot;active_profile&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="RequestHandler.change_active_profile"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.change_active_profile">[docs]</a>    <span class="k">def</span> <span class="nf">change_active_profile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">profile_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Change active profile to the one indicated by `profile_id`.</span>
+
+<span class="sd">        Use :meth:`~RequestHandler.get_my_profiles` to obtain the possible</span>
+<span class="sd">        profiles.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AttributeError</span>
+<span class="sd">            When the profile can&#39;t be found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_post</span><span class="p">(</span>
+            <span class="s2">&quot;changeActiveProfile&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;profiles_id&quot;</span><span class="p">:</span> <span class="n">profile_id</span><span class="p">},</span> <span class="n">on_error_raise</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">404</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Profile not found&quot;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_do_method</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">api_method_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">JSON</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">headers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">on_error_raise</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">requests</span><span class="o">.</span><span class="n">Response</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Session-Token&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_token</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_method_url</span><span class="p">(</span><span class="n">api_method_url</span><span class="p">)</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_dict</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__session</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Calling method </span><span class="si">{</span><span class="n">api_method_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__session</span><span class="p">,</span> <span class="n">method</span><span class="p">)(</span>
+            <span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">verify</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verify_tls</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">files</span><span class="o">=</span><span class="n">files</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">on_error_raise</span><span class="p">:</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">r</span>
+
+    <span class="k">def</span> <span class="nf">_do_post</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">JSON</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span>
+        <span class="n">headers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">on_error_raise</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">requests</span><span class="o">.</span><span class="n">Response</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_method</span><span class="p">(</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;post&quot;</span><span class="p">,</span>
+            <span class="n">api_method_url</span><span class="o">=</span><span class="n">action</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+            <span class="n">on_error_raise</span><span class="o">=</span><span class="n">on_error_raise</span><span class="p">,</span>
+            <span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="RequestHandler.get_my_entities"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.get_my_entities">[docs]</a>    <span class="k">def</span> <span class="nf">get_my_entities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">recursive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">JSON</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return all the entities of the current logged user.</span>
+<span class="sd">        </span>
+<span class="sd">        Also returns entities related to the current active profile.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; handler.get_my_entities()</span>
+<span class="sd">        [</span>
+<span class="sd">            {</span>
+<span class="sd">                &#39;id&#39;:   71</span>
+<span class="sd">                &#39;name&#39;: &quot;my_entity&quot;</span>
+<span class="sd">            },</span>
+<span class="sd">            ...</span>
+<span class="sd">        ]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_json</span><span class="p">(</span>
+            <span class="s2">&quot;getMyEntities&quot;</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;is_recursive&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">recursive</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()}</span>
+        <span class="p">)[</span><span class="s2">&quot;myentities&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="RequestHandler.get_active_entities"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.get_active_entities">[docs]</a>    <span class="k">def</span> <span class="nf">get_active_entities</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JSON</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return active entities of current logged user.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; handler.get_active_entities()</span>
+<span class="sd">        {</span>
+<span class="sd">            &#39;id&#39;: 1,</span>
+<span class="sd">            &#39;active_entity_recursive&#39;: true,</span>
+<span class="sd">            &#39;active_entities&#39;: [</span>
+<span class="sd">                {&quot;id&quot;:1},</span>
+<span class="sd">                {&quot;id&quot;:71},...</span>
+<span class="sd">            ]</span>
+<span class="sd">        }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_json</span><span class="p">(</span><span class="s2">&quot;getActiveEntities&quot;</span><span class="p">)[</span><span class="s2">&quot;active_entity&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="RequestHandler.change_active_entity"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.change_active_entity">[docs]</a>    <span class="k">def</span> <span class="nf">change_active_entity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Change active entity to `entity_id`.</span>
+<span class="sd">        </span>
+<span class="sd">        Use :meth:`~RequestHandler.get_my_entities` method to know that are the viable entities.</span>
+
+<span class="sd">        Warnings</span>
+<span class="sd">        --------</span>
+<span class="sd">        Due to a bug with GLPI 9.5.3 if the API cannot find a valid entity</span>
+<span class="sd">        with that id it will just report a &quot;Bad Request&quot;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_post</span><span class="p">(</span>
+            <span class="s2">&quot;changeActiveEntities&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;entities_id&quot;</span><span class="p">:</span> <span class="n">entity_id</span><span class="p">},</span> <span class="n">on_error_raise</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">400</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="RequestHandler.get_full_session"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.get_full_session">[docs]</a>    <span class="k">def</span> <span class="nf">get_full_session</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JSON</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the current `php`&#39;s `$_SESSION`.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; handler.get_full_session()</span>
+<span class="sd">        {</span>
+<span class="sd">            &#39;valid_id&#39;: ...,</span>
+<span class="sd">            &#39;glpi_currenttime&#39;: ...,</span>
+<span class="sd">            &#39;glpi_use_mode&#39;: ...,</span>
+<span class="sd">            ...</span>
+<span class="sd">        }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_json</span><span class="p">(</span><span class="s2">&quot;getFullSession&quot;</span><span class="p">)[</span><span class="s2">&quot;session&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="RequestHandler.get_glpi_config"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.get_glpi_config">[docs]</a>    <span class="k">def</span> <span class="nf">get_glpi_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JSON</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the current `$CFG_GLPI`.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; handler.get_glpi_config()</span>
+<span class="sd">        {</span>
+<span class="sd">            &#39;languages&#39;: ...,</span>
+<span class="sd">            &#39;glpitables&#39;: ...,</span>
+<span class="sd">            &#39;unicity_types&#39;:...,</span>
+<span class="sd">            ...</span>
+<span class="sd">        }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_json</span><span class="p">(</span><span class="s2">&quot;getGlpiConfig&quot;</span><span class="p">)[</span><span class="s2">&quot;cfg_glpi&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="RequestHandler.get_item"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.get_item">[docs]</a>    <span class="k">def</span> <span class="nf">get_item</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">item_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">id_</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">expand_dropdowns</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">get_hateoas</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">get_sha1</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">with_devices</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">with_disks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">with_softwares</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">with_connections</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">with_networkports</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">with_infocoms</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">with_contracts</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">with_documents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">with_tickets</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">with_problems</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">with_changes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">with_notes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">with_logs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">add_key_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JSON</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return an instance of `item_type` identified by `id` and its associated</span>
+<span class="sd">        fields.</span>
+
+<span class="sd">        Documents and User pictures are retrieved with their respective methods.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        item_type: str</span>
+<span class="sd">            Type of the item. Eg: &#39;Computer&#39;, &#39;Ticket&#39;, &#39;Software&#39;...</span>
+<span class="sd">        id_ : int</span>
+<span class="sd">            Unique identifier of the `itemtype`.</span>
+<span class="sd">        expand_dropdowns : bool, default False</span>
+<span class="sd">            Show dropdown name instead of `id`.</span>
+<span class="sd">        get_hateoas : bool, default True</span>
+<span class="sd">            Show relations of the item in a `links` attribute.</span>
+
+<span class="sd">            See: https://en.wikipedia.org/wiki/HATEOAS</span>
+
+<span class="sd">            Can&#39;t be disabled due to a bug in the API.</span>
+<span class="sd">        get_sha1 : bool, default False</span>
+<span class="sd">            Get a sha1 signature instead of the full answer.</span>
+<span class="sd">        with_devices : bool, default False</span>
+<span class="sd">            Only for [Computer, NetworkEquipment, Peripheral, Phone, Printer], retrieve</span>
+<span class="sd">            the associated components.</span>
+<span class="sd">        with_disks : bool, default False</span>
+<span class="sd">            Only for Computer, retrieve the associated file-systems.</span>
+<span class="sd">        with_softwares : bool, default False</span>
+<span class="sd">            Only for Computer, retrieve the associated software&#39;s installations.</span>
+<span class="sd">        with_connections : bool, default False</span>
+<span class="sd">            Only for Computer, retrieve the associated direct connections (like</span>
+<span class="sd">            peripherals and printers).</span>
+<span class="sd">        with_networkports : bool, default False</span>
+<span class="sd">            Retrieve all network&#39;s connections and advanced network&#39;s information.</span>
+<span class="sd">        with_infocoms : bool, default False</span>
+<span class="sd">            Retrieve financial and administrative information.</span>
+<span class="sd">        with_contracts : bool, default False</span>
+<span class="sd">            Retrieve associated contracts.</span>
+<span class="sd">        with_documents : bool, default False</span>
+<span class="sd">            Retrieve associated external documents.</span>
+<span class="sd">        with_tickets : bool, default False</span>
+<span class="sd">            Retrieve associated ITIL tickets.</span>
+<span class="sd">        with_problems : bool, default False</span>
+<span class="sd">            Retrieve associated ITIL problems.</span>
+<span class="sd">        with_changes : bool, default False</span>
+<span class="sd">            Retrieve associated ITIL changes.</span>
+<span class="sd">        with_notes : bool, default False</span>
+<span class="sd">            Retrieve Notes.</span>
+<span class="sd">        with_logs : bool, default False</span>
+<span class="sd">            Retrieve item history.</span>
+<span class="sd">        add_key_names : List[str], default None</span>
+<span class="sd">            Retrieve friendly names of the keys &quot;id&quot; keys.</span>
+<span class="sd">            Eg.: [&#39;id&#39;, &#39;entities_id&#39;, &#39;groups_id_tech&#39; ...]</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; handler.get_item(item_type=&#39;Computer&#39;,id_=71)</span>
+<span class="sd">        {</span>
+<span class="sd">            &quot;id&quot;: 71,</span>
+<span class="sd">            &quot;entities_id&quot;: &quot;Root Entity&quot;,</span>
+<span class="sd">            &quot;name&quot;: &quot;adelaunay-ThinkPad-Edge-E320&quot;,</span>
+<span class="sd">            &quot;serial&quot;: &quot;12345&quot;,</span>
+<span class="sd">            ...</span>
+<span class="sd">        }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">get_hateoas</span><span class="p">:</span>
+            <span class="n">get_hateoas</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">request_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_request_parameters</span><span class="p">(</span>
+            <span class="n">rename</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;add_key_names&quot;</span><span class="p">:</span> <span class="s2">&quot;add_keys_names&quot;</span><span class="p">}</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_json</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">item_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">id_</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">request_parameters</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RequestHandler.get_many_items"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.get_many_items">[docs]</a>    <span class="k">def</span> <span class="nf">get_many_items</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">item_type</span><span class="p">,</span>
+        <span class="n">expand_dropdowns</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">get_hateoas</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">only_id</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">range_</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sort_by</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">order</span><span class="p">:</span> <span class="n">SortOrder</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">filter_by</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">is_deleted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">add_key_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">JSON</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Returns a set of items identified by `item_type`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        item_type: str</span>
+<span class="sd">            Type of the item. Eg: &#39;Computer&#39;, &#39;Ticket&#39;, &#39;Software&#39;...</span>
+<span class="sd">        expand_dropdowns: bool, default False</span>
+<span class="sd">            Show dropdown name instead of `id`.</span>
+<span class="sd">        get_hateoas : bool, default True</span>
+<span class="sd">            Show relations of the item in a `links` attribute.</span>
+<span class="sd">            </span>
+<span class="sd">            See: https://en.wikipedia.org/wiki/HATEOAS</span>
+
+<span class="sd">            Can&#39;t be disabled due to a bug in the API.</span>
+<span class="sd">        only_id: bool, default False</span>
+<span class="sd">            Only `id` and `links` are returned.</span>
+<span class="sd">        range_: Tuple(int, int), default (0, 50)</span>
+<span class="sd">            The start and end of the pagination.</span>
+<span class="sd">        sort_by: str, default None</span>
+<span class="sd">            Name of the field to sort by.</span>
+<span class="sd">        order: SortOrder, default SortOrder.Ascending</span>
+<span class="sd">            Sort the results according to the sort order of the `sort` field.</span>
+<span class="sd">        filter_by: Dict[str, str], default None</span>
+<span class="sd">            Filters to pass on the query.</span>
+<span class="sd">        is_deleted: bool, default False</span>
+<span class="sd">            Return deleted elements.</span>
+<span class="sd">        add_key_names: List[str], default None</span>
+<span class="sd">            Retrieve friendly names of the keys &quot;id&quot; keys.</span>
+<span class="sd">            Eg.: [&#39;id&#39;, &#39;entities_id&#39;, &#39;groups_id_tech&#39; ...]</span>
+
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; handler.get_many_items(item_type=&#39;Computer&#39;)</span>
+<span class="sd">        [</span>
+<span class="sd">            {</span>
+<span class="sd">                &quot;id&quot;: 34,</span>
+<span class="sd">                &quot;entities_id&quot;: &quot;Root Entity&quot;,</span>
+<span class="sd">                &quot;name&quot;: &quot;glpi&quot;,</span>
+<span class="sd">                ...</span>
+<span class="sd">            },...</span>
+<span class="sd">        ]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">range_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">range_</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">range_</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_deleted</span><span class="p">:</span>
+            <span class="n">is_deleted</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">get_hateoas</span><span class="p">:</span>
+            <span class="n">get_hateoas</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">request_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_request_parameters</span><span class="p">(</span>
+            <span class="n">rename</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;range_&quot;</span><span class="p">:</span> <span class="s2">&quot;range&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;add_key_names&quot;</span><span class="p">:</span> <span class="s2">&quot;add_keys_names&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;sort_by&quot;</span><span class="p">:</span> <span class="s2">&quot;sort&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">filter_by</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">filter_by</span><span class="p">:</span>
+                <span class="n">request_parameters</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">&quot;searchText[</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">,</span> <span class="n">filter_by</span><span class="p">[</span><span class="n">name</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_json</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">item_type</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">request_parameters</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RequestHandler.get_sub_items"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.get_sub_items">[docs]</a>    <span class="k">def</span> <span class="nf">get_sub_items</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">item_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">item_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">sub_item_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">expand_dropdowns</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">get_hateoas</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">only_id</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">range_</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sort_by</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">order</span><span class="p">:</span> <span class="n">SortOrder</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">add_key_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">JSON</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return subitems of the `sub_item_type` for the identified</span>
+<span class="sd">        `item_id`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        item_type: str</span>
+<span class="sd">            Type of the item. Eg: &#39;Computer&#39;, &#39;Ticket&#39;, &#39;Software&#39;...</span>
+<span class="sd">        item_id: int</span>
+<span class="sd">            Unique identifier of the parent `item_type`.</span>
+<span class="sd">        sub_item_type: str</span>
+<span class="sd">            The type of subitems you are trying to retrieve.</span>
+<span class="sd">        expand_dropdowns: bool, default False</span>
+<span class="sd">            Show dropdown name instead of `id`.</span>
+<span class="sd">        get_hateoas : bool, default True</span>
+<span class="sd">            Show relations of the item in a `links` attribute.</span>
+<span class="sd">            </span>
+<span class="sd">            See: https://en.wikipedia.org/wiki/HATEOAS</span>
+
+<span class="sd">            Can&#39;t be disabled due to a bug in the API.</span>
+<span class="sd">        only_id: bool, default False</span>
+<span class="sd">            Only `id` and `links` are returned.</span>
+<span class="sd">        range_: Tuple(int, int), default (0, 50)</span>
+<span class="sd">            The start and end of the pagination.</span>
+<span class="sd">        sort_by: str, default None</span>
+<span class="sd">            Name of the field to sort by.</span>
+<span class="sd">        order: SortOrder, default SortOrder.Ascending</span>
+<span class="sd">            Sort the results according to the sort order of the `sort` field.</span>
+<span class="sd">        add_key_names: List[str], default None</span>
+<span class="sd">            Retrieve friendly names of the keys &quot;id&quot; keys.</span>
+<span class="sd">            Eg.: [&#39;id&#39;, &#39;entities_id&#39;, &#39;groups_id_tech&#39; ...]</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; handler.get_sub_items(item_type=&#39;User&#39;, item_id=2, sub_item_type=&#39;Logs&#39;)</span>
+<span class="sd">        [</span>
+<span class="sd">            {</span>
+<span class="sd">                &quot;id&quot;: 22117,</span>
+<span class="sd">                &quot;itemtype&quot;: &quot;User&quot;,</span>
+<span class="sd">                ...</span>
+<span class="sd">            }, ...</span>
+<span class="sd">        ]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">range_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">range_</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">range_</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">get_hateoas</span><span class="p">:</span>
+            <span class="n">get_hateoas</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">request_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_request_parameters</span><span class="p">(</span>
+            <span class="n">rename</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;range_&quot;</span><span class="p">:</span> <span class="s2">&quot;range&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;add_key_names&quot;</span><span class="p">:</span> <span class="s2">&quot;add_keys_names&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;sort_by&quot;</span><span class="p">:</span> <span class="s2">&quot;sort&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_json</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">item_type</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">sub_item_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">request_parameters</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="RequestHandler.get_search_options"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.get_search_options">[docs]</a>    <span class="k">def</span> <span class="nf">get_search_options</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">item_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">raw</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">pretty</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JSON</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;List the search options of the provided `itemtype`.</span>
+<span class="sd">        </span>
+<span class="sd">        This method provides the options you need for self.search_items.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        item_type: str</span>
+<span class="sd">            Type of the item. Eg: &#39;Computer&#39;, &#39;Ticket&#39;, &#39;Software&#39;...</span>
+<span class="sd">        raw: bool, default False</span>
+<span class="sd">            Return `searchoption` uncleaned (as provided by `core`).</span>
+<span class="sd">        pretty: bool, default False</span>
+<span class="sd">            Will attempt to return the search option organized in a tree based on `uid`.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; handler.get_search_items(&#39;Computer&#39;)</span>
+<span class="sd">        {</span>
+<span class="sd">            &quot;common&quot;: &quot;Characteristics&quot;,</span>
+<span class="sd">             &quot;1&quot;: {</span>
+<span class="sd">                 &#39;name&#39;: &#39;Name&#39;</span>
+<span class="sd">                 &#39;table&#39;: &#39;glpi_computers&#39;</span>
+<span class="sd">                 &#39;field&#39;: &#39;name&#39;</span>
+<span class="sd">                 &#39;linkfield&#39;: &#39;name&#39;</span>
+<span class="sd">                 &#39;datatype&#39;: &#39;itemlink&#39;</span>
+<span class="sd">                 &#39;uid&#39;: &#39;Computer.name&#39;</span>
+<span class="sd">             },...</span>
+<span class="sd">        }</span>
+
+<span class="sd">        &gt;&gt;&gt; handler.get_search_items(&#39;Computer&#39;, pretty=True)</span>
+<span class="sd">        {&#39;Computer&#39;:</span>
+<span class="sd">            {&#39;Appliance_Item&#39;:</span>
+<span class="sd">                {&#39;Appliance&#39;:</span>
+<span class="sd">                    {&#39;ApplianceType&#39;:</span>
+<span class="sd">                        {&#39;name&#39;:</span>
+<span class="sd">                            {&#39;available_searchtypes&#39;:</span>
+<span class="sd">                                [&#39;contains&#39;, ...],</span>
+<span class="sd">                            ...</span>
+<span class="sd">                            &#39;uid&#39;: &#39;Computer.Appliance_Item.Appliance.ApplianceType.name&#39;</span>
+<span class="sd">                        },...</span>
+<span class="sd">                    },...</span>
+<span class="sd">                },...</span>
+<span class="sd">            },...</span>
+<span class="sd">        }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">recurse_parts</span><span class="p">(</span>
+            <span class="n">part_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">part_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">rest</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">end</span><span class="p">,</span> <span class="n">id_</span><span class="p">:</span> <span class="nb">int</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="n">part_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">part_data</span><span class="p">:</span>
+                <span class="n">part_data</span><span class="p">[</span><span class="n">part_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">part_data</span><span class="p">[</span><span class="n">part_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">end</span>
+                <span class="n">end</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">id_</span>
+                <span class="k">return</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">recurse_parts</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">part_data</span><span class="p">[</span><span class="n">part_name</span><span class="p">],</span> <span class="n">rest</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">id_</span><span class="p">)</span>
+
+        <span class="n">request_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_request_parameters</span><span class="p">()</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_json</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;listSearchOptions/</span><span class="si">{</span><span class="n">item_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">request_parameters</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pretty</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">json</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">isdecimal</span><span class="p">():</span>
+                    <span class="n">parts</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;uid&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+                    <span class="n">head</span> <span class="o">=</span> <span class="n">parts</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="n">recurse_parts</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">parts</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="RequestHandler.search_items"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.search_items">[docs]</a>    <span class="k">def</span> <span class="nf">search_items</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">item_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">filters</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sort_by_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">order</span><span class="p">:</span> <span class="n">SortOrder</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">range_</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">force_display</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">raw_data</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">with_indexes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">uid_cols</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">give_items</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JSON</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Search items according to some criteria.</span>
+
+<span class="sd">        Expose the GLPI searchEngine and combine filters to retrieve a list of elements</span>
+<span class="sd">        of the specified `item_type`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        item_type: str</span>
+<span class="sd">            Type of the item. Eg: &#39;Computer&#39;, &#39;Ticket&#39;, &#39;Software&#39;...[3]</span>
+<span class="sd">        filters: List[Dict[str, Any]], default None</span>
+<span class="sd">            A list of json-like objects the represents the query filters and their</span>
+<span class="sd">            their relationships.</span>
+<span class="sd">            Every filter object must have at least one `link` field (if it&#39;s not the</span>
+<span class="sd">            first object).</span>
+<span class="sd">                link: str</span>
+<span class="sd">                    A logical operator of AND, OR, AND NOT</span>
+<span class="sd">        </span>
+<span class="sd">            `Filter objects` keys are objects that narrow down the query. Their keys are:</span>
+<span class="sd">                field: int</span>
+<span class="sd">                    The id of the `search_option`.</span>
+<span class="sd">                meta: boolean</span>
+<span class="sd">                    is this criterion a meta one ?</span>
+<span class="sd">                itemtype: str</span>
+<span class="sd">                    For meta=true criterion, define the `itemtype` to use.</span>
+<span class="sd">                searchtype: str</span>
+<span class="sd">                    The comparison operation of the filter. It&#39;s one of, contains[1],</span>
+<span class="sd">                    equals[2], notequals[2], lessthan, morethan, under, notunder.</span>
+<span class="sd">                value:</span>
+<span class="sd">                    The value that the `field` is compared against.</span>
+
+<span class="sd">            `Sub-filter` objects can be seen as a pair of () separating a query its</span>
+<span class="sd">            single unique key is:</span>
+<span class="sd">                criteria: List[Dict[str, Any]]</span>
+<span class="sd">                    A list of `Filter objects`</span>
+<span class="sd">            </span>
+<span class="sd">            An example of `filters` parameter can be found in the examples section.</span>
+<span class="sd">        sort_by_id: int, default None</span>
+<span class="sd">            `id` of the `search_option` to sort by.</span>
+<span class="sd">        order: SortOrder, default SortOrder.Ascending</span>
+<span class="sd">            Sort the results according to the sort order of the `sort` field.</span>
+<span class="sd">        range_: Tuple(int, int), default (0, 50)</span>
+<span class="sd">            The start and end of the pagination.</span>
+<span class="sd">        force_display: List[int], default None</span>
+<span class="sd">            If set only the columns listed will be present in the query result.</span>
+
+<span class="sd">            **Note**: The API documentation says that some columns will always be</span>
+<span class="sd">            displayed, those are `{1: id, 2: name, 80: Entity}`. However that&#39;s not the</span>
+<span class="sd">            observed behaviour. Only `{1: id}` seems to always be displayed.</span>
+<span class="sd">        </span>
+<span class="sd">        raw_data: bool, default False</span>
+<span class="sd">            If set debug information about the query is returned in a `rawdata` field.</span>
+<span class="sd">            The results contain the SQL, the search filters as interpreted by the</span>
+<span class="sd">            `SearchEngine`, columns to retrive and many more attributes.</span>
+<span class="sd">        with_indexes: bool, default False</span>
+<span class="sd">            Instead of the resulting `data` field being a list of items found, it is</span>
+<span class="sd">            a `dict` with `id` as key. Ordering cannot work with this argument.</span>
+<span class="sd">        uid_cols: bool, default False</span>
+<span class="sd">            Replaces the numeric `id` from the resulting `data` object with human</span>
+<span class="sd">            readable names as identified by the `uid` field returned by</span>
+<span class="sd">            `get_search_options`.</span>
+<span class="sd">        give_items: bool, default False</span>
+<span class="sd">            Returns a HTML link to the item on the portal in the first field for each</span>
+<span class="sd">            returned item, inside a &#39;data_html&#39; field in the returned object.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        1. contains will use a wildcard search per default. You can restrict at the</span>
+<span class="sd">        beginning using the `^` character, and/or at the end using the `$` character.</span>
+
+<span class="sd">        2. `equals` and `notequals` are designed to be used with dropdowns. Do not</span>
+<span class="sd">        expect those operators to search for a strictly equal value (see 1. above).</span>
+
+<span class="sd">        3. You can use &#39;AllAssets&#39; as the `item_type` to retrieve a combination of</span>
+<span class="sd">        all asset&#39;s items, regardless of type.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; handler.search_items(&quot;Monitor&quot;, range=(0,2))</span>
+<span class="sd">        {</span>
+<span class="sd">            &quot;totalcount&quot;: &quot;2&quot;,</span>
+<span class="sd">            &quot;range&quot;: &quot;0:2&quot;,</span>
+<span class="sd">            &quot;data&quot;: [</span>
+<span class="sd">                {</span>
+<span class="sd">                    &quot;searchoptions_id&quot;: &quot;value&quot;,</span>
+<span class="sd">                    ...</span>
+<span class="sd">                },...</span>
+<span class="sd">            ],...</span>
+<span class="sd">        }</span>
+
+<span class="sd">        With `give_items`.</span>
+
+<span class="sd">        &gt;&gt;&gt; handler.search_items(&quot;Monitor&quot;, give_items=True)</span>
+<span class="sd">        {</span>
+<span class="sd">                    &quot;data&quot;: [...],</span>
+<span class="sd">                    &quot;data_html&quot;: [</span>
+<span class="sd">                        {</span>
+<span class="sd">                            &quot;1&quot;: &quot;&lt;a id=&#39;Monitor_1_1&#39; href=&#39;/front/monitor.form.php?id=1&#39;&gt;monitor1&lt;/a&gt;&quot;,</span>
+<span class="sd">                            &quot;19&quot;: &quot;2021-02-20 21:38&quot;,</span>
+<span class="sd">                            &quot;23&quot;: &quot;manufacturer1&quot;,</span>
+<span class="sd">                            ...</span>
+<span class="sd">                        }...</span>
+<span class="sd">                    ],...</span>
+<span class="sd">                }</span>
+
+<span class="sd">        The next example demonstrates the usage of fiters with a nested filter.</span>
+
+<span class="sd">        &gt;&gt;&gt; nested_filter = [</span>
+<span class="sd">        ...     {</span>
+<span class="sd">        ...         &quot;field&quot;:      34,</span>
+<span class="sd">        ...         &quot;searchtype&quot;: &quot;equals&quot;,</span>
+<span class="sd">        ...         &quot;value&quot;:      1</span>
+<span class="sd">        ...     }, {</span>
+<span class="sd">        ...         &quot;link&quot;:       &quot;OR&quot;,</span>
+<span class="sd">        ...         &quot;field&quot;:      35,</span>
+<span class="sd">        ...         &quot;searchtype&quot;: &quot;equals&quot;,</span>
+<span class="sd">        ...         &quot;value&quot;:      1</span>
+<span class="sd">        ...     }</span>
+<span class="sd">        ... ]</span>
+<span class="sd">        &gt;&gt;&gt; filters = [</span>
+<span class="sd">        ...     {</span>
+<span class="sd">        ...         &quot;link&quot;:       &quot;AND&#39;,</span>
+<span class="sd">        ...         &quot;field&quot;:      31,</span>
+<span class="sd">        ...         &quot;searchtype&quot;: &quot;equals&quot;,</span>
+<span class="sd">        ...         &quot;value&quot;:      1</span>
+<span class="sd">        ...      }, {</span>
+<span class="sd">        ...         &quot;link&quot;:       &quot;AND&quot;,</span>
+<span class="sd">        ...         &quot;meta&quot;:       True,</span>
+<span class="sd">        ...         &quot;itemtype&quot;:   &quot;User&quot;,</span>
+<span class="sd">        ...         &quot;field&quot;:      1,</span>
+<span class="sd">        ...         &quot;searchtype&quot;: &quot;equals&quot;,</span>
+<span class="sd">        ...         &quot;value&quot;:      1</span>
+<span class="sd">        ...      }, {</span>
+<span class="sd">        ...         &quot;link&quot;:       &quot;AND&quot;,</span>
+<span class="sd">        ...         &quot;criteria&quot; : nested_filter</span>
+<span class="sd">        ...      }</span>
+<span class="sd">        ... ]</span>
+<span class="sd">        &gt;&gt;&gt; handler.search_items(&quot;Monitor&quot;, force_display=[1], filters=filters)</span>
+<span class="sd">        {</span>
+<span class="sd">            &quot;totalcount&quot;: ...,</span>
+<span class="sd">            &quot;range&quot;: ...,</span>
+<span class="sd">            &quot;data&quot;: [</span>
+<span class="sd">                {</span>
+<span class="sd">                    &quot;1&quot;: &quot;W2242&quot;,...</span>
+<span class="sd">                },...</span>
+<span class="sd">            ],...</span>
+<span class="sd">        }</span>
+
+<span class="sd">        The above filter variable is roughly equivalent to the expression.</span>
+<span class="sd">        </span>
+<span class="sd">        &gt;&gt;&gt; [m for m in Monitors if (</span>
+<span class="sd">        ...        field[31] == 1 </span>
+<span class="sd">        ...        and User.field[1] == 1</span>
+<span class="sd">        ...        and (</span>
+<span class="sd">        ...            field[34] == 1</span>
+<span class="sd">        ...            or field[35] == 1))]</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">range_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">range_</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">range_</span><span class="p">)</span>
+        <span class="n">criteria</span> <span class="o">=</span> <span class="n">filters</span> <span class="k">if</span> <span class="n">filters</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="n">filters</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">request_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_request_parameters</span><span class="p">(</span>
+            <span class="n">rename</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;sort_by_id&quot;</span><span class="p">:</span> <span class="s2">&quot;sort&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;range_&quot;</span><span class="p">:</span> <span class="s2">&quot;range&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;force_display&quot;</span><span class="p">:</span> <span class="s2">&quot;forcedisplay&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;raw_data&quot;</span><span class="p">:</span> <span class="s2">&quot;rawdata&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;with_indexes&quot;</span><span class="p">:</span> <span class="s2">&quot;withindexes&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;give_items&quot;</span><span class="p">:</span> <span class="s2">&quot;giveItems&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">criteria</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">criteria</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">request_parameters</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">&quot;criteria[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">][</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_json</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;search/</span><span class="si">{</span><span class="n">item_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">request_parameters</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">with_indexes</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__keys_to_int</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data_html&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__keys_to_int</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">json</span></div>
+
+<div class="viewcode-block" id="RequestHandler.add_items"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.add_items">[docs]</a>    <span class="k">def</span> <span class="nf">add_items</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">item_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">JSON</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">JSON</span><span class="p">]]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">JSON</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">JSON</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Add one or several items</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        item_type: str</span>
+<span class="sd">            Type of the item. Eg: &#39;Computer&#39;, &#39;Ticket&#39;, &#39;Software&#39;...</span>
+<span class="sd">        data: Union[Dict, List[Dict]]</span>
+<span class="sd">            A dict with fields of `itemtype` to be inserted. You can add several items</span>
+<span class="sd">            in one action by passing a list of dict instead.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Union[Dict, List[Dict]]</span>
+<span class="sd">            In case a single object was passed will return a single dict, otherwise a</span>
+<span class="sd">            list of dicts.</span>
+
+<span class="sd">            In case of success the dicts might contain only the `id` of the inserted object,</span>
+<span class="sd">            otherwise it will contain a `message` field with the error message.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; handler.add_items(&quot;Software&quot;, {&quot;name&quot;: &quot;my software&quot;, &quot;location&quot;: 1})</span>
+<span class="sd">        {&#39;id&#39;: 4, &#39;message&#39;: &#39;Item Successfully Added: item name&#39;}</span>
+
+<span class="sd">        For several objects.</span>
+
+<span class="sd">        &gt;&gt;&gt; handler.add_items(</span>
+<span class="sd">        ... &quot;Software&quot;,</span>
+<span class="sd">        ... [</span>
+<span class="sd">        ...     {&quot;name&quot;: &quot;second software added&quot;, &quot;location&quot;: 1},</span>
+<span class="sd">        ...     {&quot;name&quot;: &quot;third software added&quot;, &quot;uuid&quot;: &quot;2313&quot;},</span>
+<span class="sd">        ... ])</span>
+<span class="sd">        [</span>
+<span class="sd">            {&quot;id&quot;:8, &quot;message&quot;: &quot;&quot;},</span>
+<span class="sd">            {&quot;id&quot;:false, &quot;message&quot;: &quot;You don&#39;t have permission to perform this action.&quot;},</span>
+<span class="sd">            {&quot;id&quot;:9, &quot;message&quot;: &quot;&quot;}</span>
+<span class="sd">        ]</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        So far I&#39;ve been unable to trigger an error with add_items for a single</span>
+<span class="sd">        item in a list. add_items fail silently whenever you provide an invalid</span>
+<span class="sd">        attribute ex: an attribute that references an object that doesn&#39;t exist, a</span>
+<span class="sd">        duplicated id field or even when you try to set a field that doesn&#39;t exist.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_post</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">item_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="RequestHandler.update_items"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.update_items">[docs]</a>    <span class="k">def</span> <span class="nf">update_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">JSON</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">JSON</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Update the attributes of several items.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        item_type: str</span>
+<span class="sd">            Type of the item. Eg: &#39;Computer&#39;, &#39;Ticket&#39;, &#39;Software&#39;...</span>
+<span class="sd">        data: List[Dict[str, Any]]</span>
+<span class="sd">            A list of dict with fields of `itemtype` to be update. One of those fields</span>
+<span class="sd">            must be `id`.</span>
+<span class="sd">            Field names must be lowercase.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        List[Dict]</span>
+<span class="sd">            Each field has the form `{&#39;id&#39;: 2, &#39;message&#39;: &#39;&#39;}`</span>
+<span class="sd">        </span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        As with the `add_items` method, this method is highly permissive and will not</span>
+<span class="sd">        return an error if the item with that `id` doesn&#39;t exist, or the field is</span>
+<span class="sd">        incorrect. In fact, it might create new objects in case the `id` doesn&#39;t exist.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_method</span><span class="p">(</span><span class="s2">&quot;patch&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">item_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="RequestHandler.delete_items"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.delete_items">[docs]</a>    <span class="k">def</span> <span class="nf">delete_items</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">item_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">purge</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">JSON</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Delete a list of existing objects.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        item_type: str</span>
+<span class="sd">            Type of the item. Eg: &#39;Computer&#39;, &#39;Ticket&#39;, &#39;Software&#39;...</span>
+<span class="sd">        ids: List[int]</span>
+<span class="sd">            List of ids of the objects that will be deleted.</span>
+<span class="sd">        purge: bool, default False</span>
+<span class="sd">            If set the item will skip the trash bin (if applicable), being immediately</span>
+<span class="sd">            deleted.</span>
+<span class="sd">        log: bool, default True</span>
+<span class="sd">            If set the deletion operation will be logged.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        List[Dict]</span>
+<span class="sd">        Returns a list of objects in the form of `{&#39;id&#39;: True, &#39;message&#39;: &#39;&#39;}`</span>
+
+<span class="sd">        In case of failure the `id` field value will be false and `message` will be set.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">id_</span> <span class="k">for</span> <span class="n">id_</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">}}</span>
+        <span class="k">if</span> <span class="n">purge</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;force_purge&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">log</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;force_purge&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_method</span><span class="p">(</span><span class="s2">&quot;delete&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">item_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="RequestHandler.upload_document"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.upload_document">[docs]</a>    <span class="k">def</span> <span class="nf">upload_document</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">IO</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Uploads a document to GLPI</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+
+<span class="sd">        name: str, default None</span>
+<span class="sd">            The human readable name. If unset it will be the same as `file_name`.</span>
+<span class="sd">        file: IO</span>
+<span class="sd">            A file like object</span>
+<span class="sd">        file_name: str, default None</span>
+<span class="sd">            If you want the file uploaded to have a name different from the `file`</span>
+<span class="sd">            you can set this variable. Ex: &#39;my_filename.png&#39;</span>
+<span class="sd">            If unset it will try to obtain a name from the `file` to use as the</span>
+<span class="sd">            `file_name`.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">manifest</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="s2">&quot;_filename&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">file_name</span><span class="p">]}})</span>
+
+        <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_method_url</span><span class="p">(</span><span class="s2">&quot;Document/&quot;</span><span class="p">)</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_dict</span><span class="p">({</span><span class="s2">&quot;Session-Token&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_token</span><span class="p">})</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__session</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">file_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">del</span> <span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">]</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="n">url</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+            <span class="n">verify</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verify_tls</span><span class="p">,</span>
+            <span class="n">files</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;filename[0]&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">file</span><span class="p">)},</span>
+            <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;uploadManifest&quot;</span><span class="p">:</span> <span class="n">manifest</span><span class="p">},</span>
+        <span class="p">)</span>
+        <span class="n">r</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="RequestHandler.download_document"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.download_document">[docs]</a>    <span class="k">def</span> <span class="nf">download_document</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a Document identified by `id` as `bytes`&quot;&quot;&quot;</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_method</span><span class="p">(</span>
+            <span class="s2">&quot;get&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;Document/</span><span class="si">{</span><span class="n">id_</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Accept&quot;</span><span class="p">:</span> <span class="s2">&quot;application/octet-stream&quot;</span><span class="p">},</span>
+            <span class="n">on_error_raise</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">content</span></div>
+
+<div class="viewcode-block" id="RequestHandler.download_user_profile_picture"><a class="viewcode-back" href="../../api.html#glpilib2.RequestHandler.download_user_profile_picture">[docs]</a>    <span class="k">def</span> <span class="nf">download_user_profile_picture</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the profile picture of a `User` identified by `id` as `bytes`&quot;&quot;&quot;</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_method</span><span class="p">(</span>
+            <span class="s2">&quot;get&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;User/</span><span class="si">{</span><span class="n">id_</span><span class="si">}</span><span class="s2">/Picture&quot;</span><span class="p">,</span>
+            <span class="n">on_error_raise</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">204</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;User doesn&#39;t have a profile picture&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">content</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">glpilib2</a></h1>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=marceloslacerda&repo=glpi&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Marcelo Lacerda.
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
