@@ -2,8 +2,9 @@
 GLPILIB2
 ========
 
-**glpilib2** is an easy to use python library for interfacing with `GLPI <https://github.com/glpi-project/glpi>`_'s API.
+`glpilib2 <https://msl09.com.br/glpilib2/>` is an easy to use python library for interfacing with `GLPI <https://github.com/glpi-project/glpi>`_'s API.
 
+Documentation: https://msl09.com.br/glpilib2/
 
 Features
 --------
