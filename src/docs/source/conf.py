@@ -22,7 +22,7 @@ import glpilib2
 # -- Project information -----------------------------------------------------
 
 project = "glpilib2"
-copyright = "2021, Marcelo Lacerda"
+copyright = "2024, Marcelo Lacerda"
 author = "Marcelo Lacerda"
 
 # The full version, including alpha/beta/rc tags
@@ -85,4 +85,4 @@ numpydoc_show_class_members = True
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 
-html_static_path = ["_static"]
+#html_static_path = ["_static"]

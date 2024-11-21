@@ -79,6 +79,56 @@ class RequestHandler:
         If your glpi server is using TLS with a bad
         certificate, you will need to set this to false.
 
+    Methods
+    -------
+
+    add_items:
+        Create new items (hardware, software, tickets etc.)
+    change_active_entity:
+        Change active entity
+    change_active_profile:
+        Change the active profile of the current user
+    delete_items:
+        Delete a list of items by id
+    download_document:
+        Return a document as `bytes`
+    download_user_profile_picture:
+        Return a profile picture as `bytes`
+    get_active_entities:
+        Return active entities of current logged user
+    get_active_profile:
+        Return the active profile of the current user
+    get_full_session:
+        Return the current PHP session variable
+    get_glpi_config:
+        Return the current `GLPI_CONFIG` variable
+    get_item:
+        Return single item (hardware, software, ticket etc.)
+    get_many_items:
+        Return a list of items
+    get_my_entities:
+        Return all the entities of the current logged user.
+    get_my_profiles:
+        Return all the profiles associated to the current logged user.
+    get_search_options:
+        List the search options for an item type
+    get_sub_items:
+        Return subitems of an item
+    init_session:
+        Tries to log into glpi
+    kill_session:
+        Ends the session associated with this `RequestHandler`
+    response_range:
+        Returns the `ResponseRange` of the previous API call
+    search_items:
+        Search items according to some criteria
+    session_token:
+        Returns the current session token
+    update_items:
+        Update the attributes of several items
+    upload_document:
+        Uploads a document to GLPI
+
     Notes
     -----
     Most methods require an active session to perform. If unsure
@@ -104,7 +154,9 @@ class RequestHandler:
 
     @property
     def response_range(self) -> ResponseRange:
-        """Set when methods that return multiple items are called.
+        """Returns the `ResponseRange` of the previous API call
+
+        Set when methods that return multiple items are called.
         
         """
         if self.__response_header is None:
@@ -130,8 +182,10 @@ class RequestHandler:
 
     @property
     def session_token(self) -> str:
-        """Identification token used for the current connection to the API.
-        
+        """Returns the current session token
+
+        Session token is an identification token used for the current
+        connection to the API.
         """
         if self.__session_token is None:
             raise AttributeError(
@@ -296,7 +350,7 @@ class RequestHandler:
         logger.info("Session was terminated successfully.")
 
     def get_my_profiles(self) -> List[JSON]:
-        """Return all the profiles associated to logged user.
+        """Return all the profiles associated to the current logged user.
 
         Examples
         --------
@@ -578,7 +632,7 @@ class RequestHandler:
         """Returns a set of items identified by `item_type`.
 
         Parameters
-        -----------
+        ----------
         item_type: str
             Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
         expand_dropdowns: bool, default False
@@ -653,7 +707,7 @@ class RequestHandler:
         `item_id`.
 
         Parameters
-        -----------
+        ----------
         item_type: str
             Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
         item_id: int
@@ -714,7 +768,7 @@ class RequestHandler:
         This method provides the options you need for self.search_items.
 
         Parameters
-        -----------
+        ----------
         item_type: str
             Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
         raw: bool, default False
@@ -800,7 +854,7 @@ class RequestHandler:
         of the specified `item_type`.
 
         Parameters
-        -----------
+        ----------
         item_type: str
             Type of the item. Eg: 'Computer', 'Ticket', 'Software'...[3]
         filters: List[Dict[str, Any]], default None
@@ -1033,11 +1087,11 @@ class RequestHandler:
         """Update the attributes of several items.
 
         Parameters
-        -----------
+        ----------
         item_type: str
             Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
         data: List[Dict[str, Any]]
-            A list of dict with fields of `itemtype` to be update. One of those fields
+            A list of dict with fields of `item_type` to be updated. One of those fields
             must be `id`.
             Field names must be lowercase.
 
@@ -1062,7 +1116,7 @@ class RequestHandler:
         """Delete a list of existing objects.
 
         Parameters
-        -----------
+        ----------
         item_type: str
             Type of the item. Eg: 'Computer', 'Ticket', 'Software'...
         ids: List[int]
@@ -1093,7 +1147,7 @@ class RequestHandler:
         """Uploads a document to GLPI
 
         Parameters
-        -----------
+        ----------
 
         name: str, default None
             The human readable name. If unset it will be the same as `file_name`.
