@@ -1,21 +1,18 @@
-version: '3'
-
 services:
   db:
     image: mariadb
     environment:
       - MYSQL_ROOT_PASSWORD=example
-    volumes:
-      - ./database:/var/lib/mysql
     healthcheck:
       test: mysqladmin ping -h 127.0.0.1 -uroot -pexample
   webapp:
-    image: ghcr.io/glpi-project/glpi-nightly:master
+    image: ghcr.io/glpi-project/glpi-nightly:10.0-bugfixes
     ports:
       - 127.0.0.1:8000:80
     volumes:
       - ./apache2.conf:/etc/apache2/apache2.conf
       - ./forensic_log:/var/log/httpd/forensic_log
-      - ./webapp:/var/www
+      - ./config-glpi:/var/glpi/config
+      - ./glpi:/var/www/glpi
     depends_on:
       - db

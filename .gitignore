@@ -7,3 +7,4 @@ venv/
 build/
 *.egg-info/
 *.swp
+docker-stuff/glpi/
