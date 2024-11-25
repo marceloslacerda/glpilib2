@@ -190,7 +190,7 @@ class RequestHandler:
         if self.__session_token is None:
             raise AttributeError(
                 "Request handler was not initiated! Please call init_session"
-                "if you want to start a new session."
+                " if you want to start a new session."
             )
         return self.__session_token
 
@@ -415,7 +415,7 @@ class RequestHandler:
         headers = self._header_dict(headers)
         if self.__session is None:
             self.__session = requests.Session()
-        logger.debug(f"Calling method {api_method_url}")
+        logger.debug(f"Calling method {method} on {api_method_url} with {data=} and {headers=}")
         r = getattr(self.__session, method)(
             url, headers=headers, verify=self.verify_tls, json=data, files=files
         )
@@ -614,7 +614,10 @@ class RequestHandler:
         request_parameters = self.__get_request_parameters(
             rename={"add_key_names": "add_keys_names"}
         )
-        return self._get_json(f"{item_type}/{id_}", parameters=request_parameters)
+        try:
+            return self._get_json(f"{item_type}/{id_}", parameters=request_parameters)
+        except requests.HTTPError as err:
+            raise AttributeError(f"{item_type} with id={id_} was not found") from err
 
     def get_many_items(
         self,

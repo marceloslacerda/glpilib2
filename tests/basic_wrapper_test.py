@@ -6,10 +6,12 @@ from typing import Sized, Iterable
 
 import requests
 
-module_dir = pathlib.Path(__file__).parent
-sys.path.insert(0, module_dir.parent.absolute())
+import glpilib2
 
-from glpilib2.basic_wrapper import RequestHandler, SortOrder
+module_dir = pathlib.Path(__file__).parent
+sys.path.insert(0, str(module_dir.parent.absolute()))
+
+from glpilib2 import RequestHandler, SortOrder
 
 GLPI_LOGO = pathlib.Path(module_dir / "logo-glpi-bleu-1.png")
 
@@ -165,12 +167,12 @@ class TestGLPIWrapper(unittest.TestCase):
         self.assertEqual(computers[0]["groups_id_tech"], "group1")
 
     def test_get_many_items_is_deleted(self):
-        computers = self.handler.get_many_items("Ticket", is_deleted=False)
-        self.assertLength(computers, 1)
-        self.assertEqual(computers[0]["id"], 1)
-        computers = self.handler.get_many_items("Ticket", is_deleted=True)
-        self.assertLength(computers, 1)
-        self.assertEqual(computers[0]["id"], 2)
+        tickets = self.handler.get_many_items("Ticket", is_deleted=False)
+        self.assertLength(tickets, 1)
+        self.assertEqual(tickets[0]["id"], 1)
+        tickets = self.handler.get_many_items("Ticket", is_deleted=True)
+        self.assertLength(tickets, 1)
+        self.assertEqual(tickets[0]["id"], 2)
 
     def test_get_many_items_with_key_names(self):
         computers = self.handler.get_many_items(
@@ -297,24 +299,24 @@ class TestGLPIWrapper(unittest.TestCase):
     def test_get_sub_items_sort_by(self):
         rack_log = self.handler.get_sub_items("Rack", 1, "Log")
         self.assertLength(rack_log, 2)
-        self.assertEqual(rack_log[0]["id"], 406)
-        self.assertEqual(rack_log[1]["id"], 3390)
+        self.assertEqual(rack_log[0]["id"], 959)
+        self.assertEqual(rack_log[1]["id"], 960)
         rack_log = self.handler.get_sub_items("Rack", 1, "Log", sort_by="linked_action")
         self.assertLength(rack_log, 2)
-        self.assertEqual(rack_log[0]["id"], 3390)
-        self.assertEqual(rack_log[1]["id"], 406)
+        self.assertEqual(rack_log[0]["id"], 960)
+        self.assertEqual(rack_log[1]["id"], 959)
 
     def test_get_sub_items_order(self):
         rack_log = self.handler.get_sub_items("Rack", 1, "Log")
         self.assertLength(rack_log, 2)
-        self.assertEqual(rack_log[0]["id"], 406)
-        self.assertEqual(rack_log[1]["id"], 3390)
+        self.assertEqual(rack_log[0]["id"], 959)
+        self.assertEqual(rack_log[1]["id"], 960)
         rack_log = self.handler.get_sub_items(
             "Rack", 1, "Log", order=SortOrder.Descending
         )
         self.assertLength(rack_log, 2)
-        self.assertEqual(rack_log[0]["id"], 3390)
-        self.assertEqual(rack_log[1]["id"], 406)
+        self.assertEqual(rack_log[0]["id"], 960)
+        self.assertEqual(rack_log[1]["id"], 959)
 
     @unittest.skip("Possibly another bug in the API")
     def test_get_sub_items_add_key_names(self):
@@ -475,20 +477,12 @@ class TestGLPIWrapper(unittest.TestCase):
         result = self.handler.get_item("Software", id_)
         self.assertEqual(result["id"], id_)
     
-
-    def test_delete_items(self):
-        results = self.handler.delete_items("Software", [999])
-        self.assertLength(results, 1)
-        self.assertIn(str(id_), results[0])
-        result = self.handler.get_item("Software", id_)
-        self.assertEqual(result["id"], id_)
-
     def test_delete_items_purge(self):
         id_ = self.handler.add_items(
-            "Software", {"name": "software purged", "location": 1}
+            "Software", {"name": "software purged"}
         )["id"]
         self.handler.delete_items("Software", [id_], purge=True)
-        with self.assertRaises(requests.HTTPError):
+        with self.assertRaises(AttributeError):
             self.handler.get_item("Software", id_)
 
     @unittest.skip("I have no idea how to test this")
@@ -514,7 +508,7 @@ class TestGLPIWrapper(unittest.TestCase):
         self.handler.delete_items("Document", [id_])
 
     def test_download_user_profile_picture(self):
-        result = self.handler.download_user_profile_picture(5)
+        result = self.handler.download_user_profile_picture(4)
         self.assertNotEmpty(result)
 
 

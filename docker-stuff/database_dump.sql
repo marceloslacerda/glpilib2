@@ -1955,7 +1955,7 @@ CREATE TABLE `glpi_computers` (
   KEY `uuid` (`uuid`),
   KEY `date_creation` (`date_creation`),
   KEY `is_recursive` (`is_recursive`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1964,6 +1964,8 @@ CREATE TABLE `glpi_computers` (
 
 LOCK TABLES `glpi_computers` WRITE;
 /*!40000 ALTER TABLE `glpi_computers` DISABLE KEYS */;
+INSERT INTO `glpi_computers` VALUES
+(1,0,'computer1','','','','',0,1,'','2024-11-25 14:26:27',0,0,0,0,0,0,NULL,0,0,0,0,1,0,0.0000,'','2024-11-25 13:48:16',0,NULL,NULL);
 /*!40000 ALTER TABLE `glpi_computers` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2101,7 +2103,7 @@ CREATE TABLE `glpi_configs` (
 LOCK TABLES `glpi_configs` WRITE;
 /*!40000 ALTER TABLE `glpi_configs` DISABLE KEYS */;
 INSERT INTO `glpi_configs` VALUES
-(1,'core','version','10.0.16'),
+(1,'core','version','10.0.17'),
 (2,'core','show_jobs_at_login','0'),
 (3,'core','cut','250'),
 (4,'core','list_limit','15'),
@@ -2287,7 +2289,7 @@ INSERT INTO `glpi_configs` VALUES
 (184,'core','notifications_ajax_check_interval','5'),
 (185,'core','notifications_ajax_sound',NULL),
 (186,'core','notifications_ajax_icon_url','/pics/glpi.png'),
-(187,'core','dbversion','10.0.16@b13256c443dd4fdb27b4a0d3b8fea8caba4dfaa9'),
+(187,'core','dbversion','10.0.17@bde16719fbd4112f59a9a7d34c66c959bce73434'),
 (188,'core','smtp_max_retries','5'),
 (189,'core','smtp_sender',NULL),
 (190,'core','instance_uuid',NULL),
@@ -2805,7 +2807,7 @@ CREATE TABLE `glpi_crontasklogs` (
   KEY `date` (`date`),
   KEY `crontasks_id` (`crontasks_id`),
   KEY `crontasklogs_id_state` (`crontasklogs_id`,`state`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2818,7 +2820,26 @@ INSERT INTO `glpi_crontasklogs` VALUES
 (1,5,0,'2024-11-19 10:20:20',0,0,0,'Run mode: GLPI'),
 (2,5,1,'2024-11-19 10:20:20',2,0.00343704,0,'Action completed, no processing required'),
 (3,6,0,'2024-11-19 10:26:31',0,0,0,'Run mode: GLPI'),
-(4,6,3,'2024-11-19 10:26:31',2,0.00233698,0,'Action completed, no processing required');
+(4,6,3,'2024-11-19 10:26:31',2,0.00233698,0,'Action completed, no processing required'),
+(5,9,0,'2024-11-25 12:23:41',0,0,0,'Run mode: GLPI'),
+(6,9,5,'2024-11-25 12:23:41',2,0.00494885,0,'Action completed, no processing required'),
+(7,12,0,'2024-11-25 12:37:50',0,0,0,'Run mode: GLPI'),
+(8,12,7,'2024-11-25 12:37:50',1,0.00195503,3,'Clean 3 session files created since more than 1440 seconds\n'),
+(9,12,7,'2024-11-25 12:37:50',2,0.00677991,3,'Action completed, fully processed'),
+(10,13,0,'2024-11-25 12:54:55',0,0,0,'Run mode: GLPI'),
+(11,13,10,'2024-11-25 12:54:55',2,0.0028739,0,'Action completed, no processing required'),
+(12,14,0,'2024-11-25 13:47:59',0,0,0,'Run mode: GLPI'),
+(13,14,12,'2024-11-25 13:47:59',2,0.00341392,0,'Action completed, no processing required'),
+(14,15,0,'2024-11-25 14:11:50',0,0,0,'Run mode: GLPI'),
+(15,15,14,'2024-11-25 14:11:50',2,0.00430417,0,'Action completed, no processing required'),
+(16,16,0,'2024-11-25 14:19:45',0,0,0,'Run mode: GLPI'),
+(17,16,16,'2024-11-25 14:19:45',2,0.004457,0,'Action completed, no processing required'),
+(18,17,0,'2024-11-25 14:25:13',0,0,0,'Run mode: GLPI'),
+(19,17,18,'2024-11-25 14:25:13',2,0.00262094,0,'Action completed, no processing required'),
+(20,18,0,'2024-11-25 14:44:03',0,0,0,'Run mode: GLPI'),
+(21,18,20,'2024-11-25 14:44:03',2,0.0040319,0,'Action completed, no processing required'),
+(22,19,0,'2024-11-25 14:51:11',0,0,0,'Run mode: GLPI'),
+(23,19,22,'2024-11-25 14:51:11',2,0.00319219,0,'Action completed, fully processed');
 /*!40000 ALTER TABLE `glpi_crontasklogs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2868,17 +2889,17 @@ INSERT INTO `glpi_crontasks` VALUES
 (5,'Contract','contract',86400,NULL,1,1,3,0,24,30,'2024-11-19 10:20:00',NULL,NULL,NULL,NULL),
 (6,'Infocom','infocom',86400,NULL,1,1,3,0,24,30,'2024-11-19 10:26:00',NULL,NULL,NULL,NULL),
 (7,'CronTask','logs',86400,30,0,1,3,0,24,30,NULL,NULL,NULL,NULL,NULL),
-(9,'MailCollector','mailgate',600,10,1,1,3,0,24,30,NULL,NULL,NULL,NULL,NULL),
+(9,'MailCollector','mailgate',600,10,1,1,3,0,24,30,'2024-11-25 12:23:00',NULL,NULL,NULL,NULL),
 (10,'DBconnection','checkdbreplicate',300,NULL,0,1,3,0,24,30,NULL,NULL,NULL,NULL,NULL),
 (11,'CronTask','checkupdate',604800,NULL,0,1,3,0,24,30,NULL,NULL,NULL,NULL,NULL),
-(12,'CronTask','session',86400,NULL,1,1,3,0,24,30,NULL,NULL,NULL,NULL,NULL),
-(13,'CronTask','graph',3600,NULL,1,1,3,0,24,30,NULL,NULL,NULL,NULL,NULL),
-(14,'ReservationItem','reservation',3600,NULL,1,1,3,0,24,30,NULL,NULL,NULL,NULL,NULL),
-(15,'Ticket','closeticket',43200,NULL,1,1,3,0,24,30,NULL,NULL,NULL,NULL,NULL),
-(16,'Ticket','alertnotclosed',43200,NULL,1,1,3,0,24,30,NULL,NULL,NULL,NULL,NULL),
-(17,'SlaLevel_Ticket','slaticket',300,NULL,1,1,3,0,24,30,NULL,NULL,NULL,NULL,NULL),
-(18,'Ticket','createinquest',86400,NULL,1,1,3,0,24,30,NULL,NULL,NULL,NULL,NULL),
-(19,'CronTask','watcher',86400,NULL,1,1,3,0,24,30,NULL,NULL,NULL,NULL,NULL),
+(12,'CronTask','session',86400,NULL,1,1,3,0,24,30,'2024-11-25 12:37:00',NULL,NULL,NULL,NULL),
+(13,'CronTask','graph',3600,NULL,1,1,3,0,24,30,'2024-11-25 12:54:00',NULL,NULL,NULL,NULL),
+(14,'ReservationItem','reservation',3600,NULL,1,1,3,0,24,30,'2024-11-25 13:47:00',NULL,NULL,NULL,NULL),
+(15,'Ticket','closeticket',43200,NULL,1,1,3,0,24,30,'2024-11-25 14:11:00',NULL,NULL,NULL,NULL),
+(16,'Ticket','alertnotclosed',43200,NULL,1,1,3,0,24,30,'2024-11-25 14:19:00',NULL,NULL,NULL,NULL),
+(17,'SlaLevel_Ticket','slaticket',300,NULL,1,1,3,0,24,30,'2024-11-25 14:25:00',NULL,NULL,NULL,NULL),
+(18,'Ticket','createinquest',86400,NULL,1,1,3,0,24,30,'2024-11-25 14:44:00',NULL,NULL,NULL,NULL),
+(19,'CronTask','watcher',86400,NULL,1,1,3,0,24,30,'2024-11-25 14:51:00',NULL,NULL,NULL,NULL),
 (20,'CommonITILRecurrentCron','RecurrentItems',3600,NULL,1,1,3,0,24,30,NULL,NULL,NULL,NULL,NULL),
 (21,'PlanningRecall','planningrecall',300,NULL,1,1,3,0,24,30,NULL,NULL,NULL,NULL,NULL),
 (22,'QueuedNotification','queuednotification',60,50,1,1,3,0,24,30,NULL,NULL,NULL,NULL,NULL),
@@ -5146,7 +5167,7 @@ CREATE TABLE `glpi_documents` (
   KEY `sha1sum` (`sha1sum`),
   KEY `tag` (`tag`),
   KEY `date_creation` (`date_creation`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=73 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -5155,6 +5176,79 @@ CREATE TABLE `glpi_documents` (
 
 LOCK TABLES `glpi_documents` WRITE;
 /*!40000 ALTER TABLE `glpi_documents` DISABLE KEYS */;
+INSERT INTO `glpi_documents` VALUES
+(1,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 12:21:45',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67446bd9604b00.09926942','2024-11-25 12:21:45'),
+(2,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 12:21:46',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67446bda6a3695.44707283','2024-11-25 12:21:46'),
+(3,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 12:41:15',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-6744706b0fd9c3.70614353','2024-11-25 12:41:15'),
+(4,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 12:41:16',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-6744706c1759f6.45556886','2024-11-25 12:41:16'),
+(5,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 12:41:27',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447077e7f489.65254477','2024-11-25 12:41:27'),
+(6,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 12:41:28',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447078f08d37.92639239','2024-11-25 12:41:28'),
+(7,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 12:46:58',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-674471c1f15952.43234753','2024-11-25 12:46:57'),
+(8,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 12:46:59',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-674471c303d865.38177601','2024-11-25 12:46:59'),
+(9,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 12:48:24',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447218656205.16075119','2024-11-25 12:48:24'),
+(10,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 12:48:25',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447219707fb6.19101439','2024-11-25 12:48:25'),
+(11,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 12:52:37',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447315377ba3.81738243','2024-11-25 12:52:37'),
+(12,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 12:52:38',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447316516e19.21023999','2024-11-25 12:52:38'),
+(13,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:40:37',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447e55cff6f0.24452595','2024-11-25 13:40:37'),
+(14,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:40:38',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447e56e30ab1.15725884','2024-11-25 13:40:38'),
+(15,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:41:10',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447e76a612e6.93397645','2024-11-25 13:41:10'),
+(16,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:41:11',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447e77bfce61.07700836','2024-11-25 13:41:11'),
+(17,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:41:37',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447e918f0007.38199002','2024-11-25 13:41:37'),
+(18,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:41:38',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447e92a834b2.64902882','2024-11-25 13:41:38'),
+(19,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:42:46',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447ed6d6ba46.00122346','2024-11-25 13:42:46'),
+(20,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:42:47',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447ed7eb71c1.04246546','2024-11-25 13:42:47'),
+(21,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:43:26',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447efeb2c996.22107309','2024-11-25 13:43:26'),
+(22,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:43:27',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447effcf6292.30687166','2024-11-25 13:43:27'),
+(23,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:46:07',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447f9fb25191.04518188','2024-11-25 13:46:07'),
+(24,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:46:08',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447fa0cec087.07492653','2024-11-25 13:46:08'),
+(25,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:46:47',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447fc711a8b3.35454057','2024-11-25 13:46:47'),
+(26,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:46:48',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67447fc82c10f6.77940759','2024-11-25 13:46:48'),
+(27,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:48:24',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67448028abe3a2.74955917','2024-11-25 13:48:24'),
+(28,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:48:25',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-674480298b4885.64328061','2024-11-25 13:48:25'),
+(29,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:49:50',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-6744807e971f87.04299717','2024-11-25 13:49:50'),
+(30,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:49:51',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-6744807f7127d1.07171657','2024-11-25 13:49:51'),
+(31,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:50:03',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-6744808bbb9a46.55884431','2024-11-25 13:50:03'),
+(32,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 13:50:04',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-6744808c8e3ef2.70303492','2024-11-25 13:50:04'),
+(33,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:13:34',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-6744860e273800.67262168','2024-11-25 14:13:34'),
+(34,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:13:35',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-6744860f07bda1.29092523','2024-11-25 14:13:35'),
+(35,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:15:30',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-6744868241b534.42676566','2024-11-25 14:15:30'),
+(36,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:15:31',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-674486831617c3.08724709','2024-11-25 14:15:31'),
+(37,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:18:47',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-674487476ae797.44214942','2024-11-25 14:18:47'),
+(38,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:20:11',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-6744879b5f78b4.79123833','2024-11-25 14:20:11'),
+(39,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:20:12',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-6744879c31e2e6.84044654','2024-11-25 14:20:12'),
+(40,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:21:49',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-674487fdc0ef63.50312770','2024-11-25 14:21:49'),
+(41,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:21:50',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-674487fe8f6971.84224216','2024-11-25 14:21:50'),
+(42,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:22:28',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-674488248d5084.72602479','2024-11-25 14:22:28'),
+(43,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:22:29',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-6744882556a989.77148611','2024-11-25 14:22:29'),
+(44,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:23:30',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-674488624de554.76846415','2024-11-25 14:23:30'),
+(45,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:23:31',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-674488631a68c7.95286820','2024-11-25 14:23:31'),
+(46,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:24:28',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-6744889c27cd43.27380960','2024-11-25 14:24:28'),
+(47,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:24:28',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-6744889ce8fba4.62249837','2024-11-25 14:24:28'),
+(48,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:24:49',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-674488b10386f3.27118530','2024-11-25 14:24:49'),
+(49,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:24:49',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-674488b1c32677.69799303','2024-11-25 14:24:49'),
+(50,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:25:16',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-674488cc662a64.71242732','2024-11-25 14:25:16'),
+(51,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:25:17',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-674488cd2facb6.18713614','2024-11-25 14:25:17'),
+(52,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:26:31',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-674489174ffc89.88291635','2024-11-25 14:26:31'),
+(53,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:26:32',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-6744891818aaf4.19645540','2024-11-25 14:26:32'),
+(54,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:28:20',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-674489844b73b0.26373920','2024-11-25 14:28:20'),
+(55,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:28:20',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-6744898500c114.65827188','2024-11-25 14:28:20'),
+(56,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:28:42',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-6744899ab74046.77497627','2024-11-25 14:28:42'),
+(57,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:28:43',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-6744899b6bd7d6.63460700','2024-11-25 14:28:43'),
+(58,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:29:17',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-674489bdaad557.81884099','2024-11-25 14:29:17'),
+(59,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:29:18',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-674489be5fe780.22852116','2024-11-25 14:29:18'),
+(60,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:44:24',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67448d48ab76b0.14722949','2024-11-25 14:44:24'),
+(61,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:44:25',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67448d495e71c8.90917726','2024-11-25 14:44:25'),
+(62,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:44:52',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67448d6469ffc9.05970215','2024-11-25 14:44:52'),
+(63,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:44:53',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67448d651cbbc7.15736781','2024-11-25 14:44:53'),
+(64,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:46:06',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67448dae874023.43913407','2024-11-25 14:46:06'),
+(65,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:47:56',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67448e1c4727e8.30453600','2024-11-25 14:47:56'),
+(66,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:47:56',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67448e1cecebc0.34717480','2024-11-25 14:47:56'),
+(67,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:51:26',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67448eee813184.79235065','2024-11-25 14:51:26'),
+(68,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:51:27',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67448eef387c65.22145207','2024-11-25 14:51:27'),
+(69,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:51:38',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67448efabf88d6.34242367','2024-11-25 14:51:38'),
+(70,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:51:39',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67448efb752f05.71489878','2024-11-25 14:51:39'),
+(71,0,0,'logo-glpi-bleu-1.png','logo-glpi-bleu-1.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:52:17',NULL,1,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67448f21c23596.34215135','2024-11-25 14:52:17'),
+(72,0,0,'GLPI logo blue','logo-glpi.png','PNG/d4/6ac9028f17ca3bc7d16f44c084572c30ad8a03.PNG',0,'image/png','2024-11-25 14:52:18',NULL,0,NULL,4,0,'d46ac9028f17ca3bc7d16f44c084572c30ad8a03',0,'21380433-b2d8e96f-67448f22769ce9.74332818','2024-11-25 14:52:18');
 /*!40000 ALTER TABLE `glpi_documents` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -5791,7 +5885,7 @@ CREATE TABLE `glpi_entities` (
 LOCK TABLES `glpi_entities` WRITE;
 /*!40000 ALTER TABLE `glpi_entities` DISABLE KEYS */;
 INSERT INTO `glpi_entities` VALUES
-(0,'Root entity',NULL,'Root entity',NULL,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,0,0,30,1,-10,-10,0,0,0,-10,1,NULL,1,0,0,NULL,'0','0','0','0','0',0,1,0,1,0,1,-10,0,0,0,10,10,0,1,0,NULL,NULL,'0',0,0,1,0,0,0,NULL,NULL,NULL,NULL,0,0,NULL);
+(0,'Root entity',NULL,'Root entity',NULL,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,0,0,30,1,-10,-10,0,0,0,-10,1,NULL,1,0,0,NULL,'0','0','0','0','0',0,1,0,1,0,1,-10,0,0,0,10,10,0,1,0,NULL,NULL,'0',0,0,1,0,0,0,'',NULL,NULL,NULL,0,0,NULL);
 /*!40000 ALTER TABLE `glpi_entities` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -5898,7 +5992,7 @@ CREATE TABLE `glpi_events` (
   KEY `date` (`date`),
   KEY `level` (`level`),
   KEY `item` (`type`,`items_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=72 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -5913,7 +6007,72 @@ INSERT INTO `glpi_events` VALUES
 (3,1,'APIClient','2024-11-19 10:21:28','setup',4,'glpi updates an item'),
 (4,4,'users','2024-11-19 10:21:49','setup',5,'glpi updates an item'),
 (5,0,'system','2024-11-19 10:27:13','login',3,'tech log in from IP 172.22.0.1'),
-(6,1,'ticket','2024-11-19 10:27:53','tracking',4,'glpi adds the item 1');
+(6,1,'ticket','2024-11-19 10:27:53','tracking',4,'glpi adds the item 1'),
+(7,0,'Plugin','2024-11-25 12:12:54','setup',3,'All plugins have been disabled.'),
+(8,0,'system','2024-11-25 12:21:44','login',3,'tech log in from IP 172.22.0.1'),
+(9,0,'system','2024-11-25 12:24:02','login',3,'glpi login from IP 172.22.0.1'),
+(10,4,'users','2024-11-25 12:39:54','setup',4,'glpi adds a user to an entity'),
+(11,0,'system','2024-11-25 12:41:14','login',3,'tech log in from IP 172.22.0.1'),
+(12,0,'system','2024-11-25 12:41:27','login',3,'tech log in from IP 172.22.0.1'),
+(13,0,'system','2024-11-25 12:46:57','login',3,'tech log in from IP 172.22.0.1'),
+(14,0,'system','2024-11-25 12:48:24','login',3,'tech log in from IP 172.22.0.1'),
+(15,0,'system','2024-11-25 12:52:37','login',3,'tech log in from IP 172.22.0.1'),
+(16,0,'system','2024-11-25 13:40:37','login',3,'tech log in from IP 172.22.0.1'),
+(17,0,'system','2024-11-25 13:41:10','login',3,'tech log in from IP 172.22.0.1'),
+(18,0,'system','2024-11-25 13:41:37','login',3,'tech log in from IP 172.22.0.1'),
+(19,0,'system','2024-11-25 13:42:24','login',3,'glpi login from IP 172.22.0.1'),
+(20,4,'users','2024-11-25 13:42:36','setup',5,'glpi updates an item'),
+(21,0,'system','2024-11-25 13:42:46','login',3,'tech log in from IP 172.22.0.1'),
+(22,0,'system','2024-11-25 13:43:26','login',3,'tech log in from IP 172.22.0.1'),
+(23,0,'system','2024-11-25 13:46:07','login',3,'tech log in from IP 172.22.0.1'),
+(24,0,'system','2024-11-25 13:46:46','login',3,'tech log in from IP 172.22.0.1'),
+(25,1,'computers','2024-11-25 13:48:16','inventory',4,'glpi adds the item Test computer'),
+(26,0,'system','2024-11-25 13:48:24','login',3,'tech log in from IP 172.22.0.1'),
+(27,1,'groups','2024-11-25 13:49:18','setup',4,'glpi adds the item group1'),
+(28,0,'system','2024-11-25 13:49:50','login',3,'tech log in from IP 172.22.0.1'),
+(29,1,'computers','2024-11-25 13:49:58','inventory',4,'glpi updates an item'),
+(30,0,'system','2024-11-25 13:50:03','login',3,'tech log in from IP 172.22.0.1'),
+(31,1,'ticket','2024-11-25 14:13:28','tracking',4,'glpi updates an item'),
+(32,0,'system','2024-11-25 14:13:33','login',3,'tech log in from IP 172.22.0.1'),
+(33,0,'system','2024-11-25 14:15:30','login',3,'tech log in from IP 172.22.0.1'),
+(34,0,'system','2024-11-25 14:18:47','login',3,'tech log in from IP 172.22.0.1'),
+(35,1,'computers','2024-11-25 14:20:05','inventory',4,'glpi updates an item'),
+(36,0,'system','2024-11-25 14:20:11','login',3,'tech log in from IP 172.22.0.1'),
+(37,2,'ticket','2024-11-25 14:21:33','tracking',4,'glpi adds the item 2'),
+(38,2,'ticket','2024-11-25 14:21:41','tracking',4,'glpi deletes an item'),
+(39,0,'system','2024-11-25 14:21:49','login',3,'tech log in from IP 172.22.0.1'),
+(40,1,'monitors','2024-11-25 14:22:16','inventory',4,'glpi adds the item Monitor 1'),
+(41,2,'monitors','2024-11-25 14:22:22','inventory',4,'glpi adds the item Monitor 2'),
+(42,0,'system','2024-11-25 14:22:28','login',3,'tech log in from IP 172.22.0.1'),
+(43,1,'monitors','2024-11-25 14:23:17','inventory',4,'glpi updates an item'),
+(44,2,'monitors','2024-11-25 14:23:26','inventory',4,'glpi updates an item'),
+(45,0,'system','2024-11-25 14:23:30','login',3,'tech log in from IP 172.22.0.1'),
+(46,2,'monitors','2024-11-25 14:24:23','inventory',4,'glpi updates an item'),
+(47,0,'system','2024-11-25 14:24:27','login',3,'tech log in from IP 172.22.0.1'),
+(48,1,'monitors','2024-11-25 14:24:43','inventory',4,'glpi updates an item'),
+(49,0,'system','2024-11-25 14:24:48','login',3,'tech log in from IP 172.22.0.1'),
+(50,1,'monitors','2024-11-25 14:25:13','inventory',4,'glpi updates an item'),
+(51,0,'system','2024-11-25 14:25:16','login',3,'tech log in from IP 172.22.0.1'),
+(52,1,'computers','2024-11-25 14:26:27','inventory',4,'glpi updates an item'),
+(53,0,'system','2024-11-25 14:26:31','login',3,'tech log in from IP 172.22.0.1'),
+(54,1,'racks','2024-11-25 14:27:39','inventory',4,'glpi adds the item rack1'),
+(55,1,'racks','2024-11-25 14:28:01','inventory',4,'glpi updates an item'),
+(56,0,'system','2024-11-25 14:28:20','login',3,'tech log in from IP 172.22.0.1'),
+(57,0,'system','2024-11-25 14:28:42','login',3,'tech log in from IP 172.22.0.1'),
+(58,0,'system','2024-11-25 14:29:17','login',3,'tech log in from IP 172.22.0.1'),
+(59,1,'monitors','2024-11-25 14:44:12','inventory',4,'glpi updates an item'),
+(60,2,'monitors','2024-11-25 14:44:19','inventory',4,'glpi updates an item'),
+(61,0,'system','2024-11-25 14:44:24','login',3,'tech log in from IP 172.22.0.1'),
+(62,2,'monitors','2024-11-25 14:44:32','inventory',4,'glpi updates an item'),
+(63,2,'monitors','2024-11-25 14:44:40','inventory',4,'glpi updates an item'),
+(64,0,'system','2024-11-25 14:44:52','login',3,'tech log in from IP 172.22.0.1'),
+(65,0,'system','2024-11-25 14:46:06','login',3,'tech log in from IP 172.22.0.1'),
+(66,0,'system','2024-11-25 14:47:56','login',3,'tech log in from IP 172.22.0.1'),
+(67,1,'monitors','2024-11-25 14:51:17','inventory',4,'glpi updates an item'),
+(68,2,'monitors','2024-11-25 14:51:22','inventory',4,'glpi updates an item'),
+(69,0,'system','2024-11-25 14:51:26','login',3,'tech log in from IP 172.22.0.1'),
+(70,0,'system','2024-11-25 14:51:38','login',3,'tech log in from IP 172.22.0.1'),
+(71,0,'system','2024-11-25 14:52:17','login',3,'tech log in from IP 172.22.0.1');
 /*!40000 ALTER TABLE `glpi_events` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -6127,7 +6286,7 @@ CREATE TABLE `glpi_groups` (
   KEY `is_manager` (`is_manager`),
   KEY `date_creation` (`date_creation`),
   KEY `level` (`level`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -6136,6 +6295,8 @@ CREATE TABLE `glpi_groups` (
 
 LOCK TABLES `glpi_groups` WRITE;
 /*!40000 ALTER TABLE `glpi_groups` DISABLE KEYS */;
+INSERT INTO `glpi_groups` VALUES
+(1,0,0,'group1','',NULL,NULL,NULL,'2024-11-25 13:49:18',0,'group1',1,'[]',NULL,1,1,1,1,1,1,1,1,'2024-11-25 13:49:18');
 /*!40000 ALTER TABLE `glpi_groups` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -8876,7 +9037,7 @@ CREATE TABLE `glpi_logs` (
   KEY `itemtype_link` (`itemtype_link`),
   KEY `item` (`itemtype`,`items_id`),
   KEY `id_search_option` (`id_search_option`)
-) ENGINE=InnoDB AUTO_INCREMENT=706 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=1056 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -9590,7 +9751,320 @@ INSERT INTO `glpi_logs` VALUES
 (702,'Ticket',1,'',0,'glpi (2)','2024-11-19 10:27:53',150,'0','1'),
 (703,'Ticket',1,'User',15,'glpi (2)','2024-11-19 10:27:53',5,'','glpi (2)'),
 (704,'Ticket',1,'',0,'glpi (2)','2024-11-19 10:27:53',12,'1','2'),
-(705,'Ticket',1,'0',20,'glpi (2)','2024-11-19 10:27:53',0,'','');
+(705,'Ticket',1,'0',20,'glpi (2)','2024-11-19 10:27:53',0,'',''),
+(706,'Config',1,'',0,'','2024-11-25 12:12:54',1,'version 10.0.16','10.0.17'),
+(707,'Config',1,'',0,'','2024-11-25 12:12:54',1,'dbversion 10.0.16@b13256c443dd4fdb27b4a0d3b8fea8caba4dfaa9','10.0.17@bde16719fbd4112f59a9a7d34c66c959bce73434'),
+(708,'Software',1,'0',20,'tech (4)','2024-11-25 12:21:44',0,'',''),
+(709,'Software',2,'0',20,'tech (4)','2024-11-25 12:21:45',0,'',''),
+(710,'Software',3,'0',20,'tech (4)','2024-11-25 12:21:45',0,'',''),
+(712,'Document',1,'0',20,'tech (4)','2024-11-25 12:21:45',0,'',''),
+(713,'Document',1,'0',13,'tech (4)','2024-11-25 12:21:45',0,'',''),
+(714,'Document',2,'0',20,'tech (4)','2024-11-25 12:21:46',0,'',''),
+(715,'User',4,'Profile',17,'glpi (2)','2024-11-25 12:39:54',0,'','Root entity (0), Super-Admin (4)'),
+(716,'Profile',4,'User',17,'glpi (2)','2024-11-25 12:39:54',0,'','tech (4), Root entity (0)'),
+(717,'Entity',0,'User',17,'glpi (2)','2024-11-25 12:39:54',0,'','tech (4), Super-Admin (4)'),
+(718,'Software',5,'0',20,'tech (4)','2024-11-25 12:41:14',0,'',''),
+(719,'Software',6,'0',20,'tech (4)','2024-11-25 12:41:14',0,'',''),
+(720,'Software',7,'0',20,'tech (4)','2024-11-25 12:41:14',0,'',''),
+(722,'Document',3,'0',20,'tech (4)','2024-11-25 12:41:15',0,'',''),
+(723,'Document',3,'0',13,'tech (4)','2024-11-25 12:41:15',0,'',''),
+(724,'Document',4,'0',20,'tech (4)','2024-11-25 12:41:16',0,'',''),
+(725,'Software',9,'0',20,'tech (4)','2024-11-25 12:41:27',0,'',''),
+(726,'Software',10,'0',20,'tech (4)','2024-11-25 12:41:27',0,'',''),
+(727,'Software',11,'0',20,'tech (4)','2024-11-25 12:41:27',0,'',''),
+(729,'Document',5,'0',20,'tech (4)','2024-11-25 12:41:27',0,'',''),
+(730,'Document',5,'0',13,'tech (4)','2024-11-25 12:41:27',0,'',''),
+(731,'Document',6,'0',20,'tech (4)','2024-11-25 12:41:28',0,'',''),
+(732,'Software',13,'0',20,'tech (4)','2024-11-25 12:46:57',0,'',''),
+(733,'Software',14,'0',20,'tech (4)','2024-11-25 12:46:57',0,'',''),
+(734,'Software',15,'0',20,'tech (4)','2024-11-25 12:46:57',0,'',''),
+(736,'Document',7,'0',20,'tech (4)','2024-11-25 12:46:57',0,'',''),
+(737,'Document',7,'0',13,'tech (4)','2024-11-25 12:46:58',0,'',''),
+(738,'Document',8,'0',20,'tech (4)','2024-11-25 12:46:59',0,'',''),
+(739,'Software',17,'0',20,'tech (4)','2024-11-25 12:48:24',0,'',''),
+(740,'Software',18,'0',20,'tech (4)','2024-11-25 12:48:24',0,'',''),
+(741,'Software',19,'0',20,'tech (4)','2024-11-25 12:48:24',0,'',''),
+(743,'Document',9,'0',20,'tech (4)','2024-11-25 12:48:24',0,'',''),
+(744,'Document',9,'0',13,'tech (4)','2024-11-25 12:48:24',0,'',''),
+(745,'Document',10,'0',20,'tech (4)','2024-11-25 12:48:25',0,'',''),
+(746,'Software',21,'0',20,'tech (4)','2024-11-25 12:52:37',0,'',''),
+(747,'Software',22,'0',20,'tech (4)','2024-11-25 12:52:37',0,'',''),
+(748,'Software',23,'0',20,'tech (4)','2024-11-25 12:52:37',0,'',''),
+(750,'Document',11,'0',20,'tech (4)','2024-11-25 12:52:37',0,'',''),
+(751,'Document',11,'0',13,'tech (4)','2024-11-25 12:52:37',0,'',''),
+(752,'Document',12,'0',20,'tech (4)','2024-11-25 12:52:38',0,'',''),
+(753,'Software',25,'0',20,'tech (4)','2024-11-25 13:40:37',0,'',''),
+(754,'Software',26,'0',20,'tech (4)','2024-11-25 13:40:37',0,'',''),
+(755,'Software',27,'0',20,'tech (4)','2024-11-25 13:40:37',0,'',''),
+(757,'Document',13,'0',20,'tech (4)','2024-11-25 13:40:37',0,'',''),
+(758,'Document',13,'0',13,'tech (4)','2024-11-25 13:40:37',0,'',''),
+(759,'Document',14,'0',20,'tech (4)','2024-11-25 13:40:38',0,'',''),
+(760,'Software',29,'0',20,'tech (4)','2024-11-25 13:41:10',0,'',''),
+(761,'Software',30,'0',20,'tech (4)','2024-11-25 13:41:10',0,'',''),
+(762,'Software',31,'0',20,'tech (4)','2024-11-25 13:41:10',0,'',''),
+(764,'Document',15,'0',20,'tech (4)','2024-11-25 13:41:10',0,'',''),
+(765,'Document',15,'0',13,'tech (4)','2024-11-25 13:41:10',0,'',''),
+(766,'Document',16,'0',20,'tech (4)','2024-11-25 13:41:11',0,'',''),
+(767,'Software',33,'0',20,'tech (4)','2024-11-25 13:41:37',0,'',''),
+(768,'Software',34,'0',20,'tech (4)','2024-11-25 13:41:37',0,'',''),
+(769,'Software',35,'0',20,'tech (4)','2024-11-25 13:41:37',0,'',''),
+(770,'Software',36,'0',20,'tech (4)','2024-11-25 13:41:37',0,'',''),
+(771,'Software',36,'0',13,'tech (4)','2024-11-25 13:41:37',0,'',''),
+(773,'Document',17,'0',20,'tech (4)','2024-11-25 13:41:37',0,'',''),
+(774,'Document',17,'0',13,'tech (4)','2024-11-25 13:41:37',0,'',''),
+(775,'Document',18,'0',20,'tech (4)','2024-11-25 13:41:38',0,'',''),
+(776,'User',4,'',0,'glpi (2)','2024-11-25 13:42:36',150,'','8a/4_67447ecce048a.jpg'),
+(777,'Software',38,'0',20,'tech (4)','2024-11-25 13:42:46',0,'',''),
+(778,'Software',39,'0',20,'tech (4)','2024-11-25 13:42:46',0,'',''),
+(779,'Software',40,'0',20,'tech (4)','2024-11-25 13:42:46',0,'',''),
+(780,'Software',41,'0',20,'tech (4)','2024-11-25 13:42:46',0,'',''),
+(781,'Software',41,'0',13,'tech (4)','2024-11-25 13:42:46',0,'',''),
+(783,'Document',19,'0',20,'tech (4)','2024-11-25 13:42:46',0,'',''),
+(784,'Document',19,'0',13,'tech (4)','2024-11-25 13:42:46',0,'',''),
+(785,'Document',20,'0',20,'tech (4)','2024-11-25 13:42:47',0,'',''),
+(786,'Software',43,'0',20,'tech (4)','2024-11-25 13:43:26',0,'',''),
+(787,'Software',44,'0',20,'tech (4)','2024-11-25 13:43:26',0,'',''),
+(788,'Software',45,'0',20,'tech (4)','2024-11-25 13:43:26',0,'',''),
+(789,'Software',46,'0',20,'tech (4)','2024-11-25 13:43:26',0,'',''),
+(790,'Software',46,'0',13,'tech (4)','2024-11-25 13:43:26',0,'',''),
+(792,'Document',21,'0',20,'tech (4)','2024-11-25 13:43:26',0,'',''),
+(793,'Document',21,'0',13,'tech (4)','2024-11-25 13:43:26',0,'',''),
+(794,'Document',22,'0',20,'tech (4)','2024-11-25 13:43:27',0,'',''),
+(795,'Software',48,'0',20,'tech (4)','2024-11-25 13:46:07',0,'',''),
+(796,'Software',49,'0',20,'tech (4)','2024-11-25 13:46:07',0,'',''),
+(797,'Software',50,'0',20,'tech (4)','2024-11-25 13:46:07',0,'',''),
+(798,'Software',51,'0',20,'tech (4)','2024-11-25 13:46:07',0,'',''),
+(799,'Software',51,'0',13,'tech (4)','2024-11-25 13:46:07',0,'',''),
+(801,'Document',23,'0',20,'tech (4)','2024-11-25 13:46:07',0,'',''),
+(802,'Document',23,'0',13,'tech (4)','2024-11-25 13:46:07',0,'',''),
+(803,'Document',24,'0',20,'tech (4)','2024-11-25 13:46:08',0,'',''),
+(804,'Software',53,'0',20,'tech (4)','2024-11-25 13:46:46',0,'',''),
+(805,'Software',54,'0',20,'tech (4)','2024-11-25 13:46:46',0,'',''),
+(806,'Software',55,'0',20,'tech (4)','2024-11-25 13:46:46',0,'',''),
+(807,'Software',56,'0',20,'tech (4)','2024-11-25 13:46:46',0,'',''),
+(808,'Software',56,'0',13,'tech (4)','2024-11-25 13:46:46',0,'',''),
+(810,'Document',25,'0',20,'tech (4)','2024-11-25 13:46:47',0,'',''),
+(811,'Document',25,'0',13,'tech (4)','2024-11-25 13:46:47',0,'',''),
+(812,'Document',26,'0',20,'tech (4)','2024-11-25 13:46:48',0,'',''),
+(813,'Computer',1,'0',20,'glpi (2)','2024-11-25 13:48:16',0,'',''),
+(814,'Software',58,'0',20,'tech (4)','2024-11-25 13:48:24',0,'',''),
+(815,'Software',59,'0',20,'tech (4)','2024-11-25 13:48:24',0,'',''),
+(816,'Software',60,'0',20,'tech (4)','2024-11-25 13:48:24',0,'',''),
+(817,'Software',61,'0',20,'tech (4)','2024-11-25 13:48:24',0,'',''),
+(818,'Software',61,'0',13,'tech (4)','2024-11-25 13:48:24',0,'',''),
+(820,'Document',27,'0',20,'tech (4)','2024-11-25 13:48:24',0,'',''),
+(821,'Document',27,'0',13,'tech (4)','2024-11-25 13:48:24',0,'',''),
+(822,'Document',28,'0',20,'tech (4)','2024-11-25 13:48:25',0,'',''),
+(823,'Group',1,'0',20,'glpi (2)','2024-11-25 13:49:18',0,'',''),
+(824,'Software',63,'0',20,'tech (4)','2024-11-25 13:49:50',0,'',''),
+(825,'Software',64,'0',20,'tech (4)','2024-11-25 13:49:50',0,'',''),
+(826,'Software',65,'0',20,'tech (4)','2024-11-25 13:49:50',0,'',''),
+(827,'Software',66,'0',20,'tech (4)','2024-11-25 13:49:50',0,'',''),
+(828,'Software',66,'0',13,'tech (4)','2024-11-25 13:49:50',0,'',''),
+(830,'Document',29,'0',20,'tech (4)','2024-11-25 13:49:50',0,'',''),
+(831,'Document',29,'0',13,'tech (4)','2024-11-25 13:49:50',0,'',''),
+(832,'Document',30,'0',20,'tech (4)','2024-11-25 13:49:51',0,'',''),
+(833,'Computer',1,'',0,'glpi (2)','2024-11-25 13:49:58',71,'&nbsp; (0)','group1 (1)'),
+(834,'Software',68,'0',20,'tech (4)','2024-11-25 13:50:03',0,'',''),
+(835,'Software',69,'0',20,'tech (4)','2024-11-25 13:50:03',0,'',''),
+(836,'Software',70,'0',20,'tech (4)','2024-11-25 13:50:03',0,'',''),
+(837,'Software',71,'0',20,'tech (4)','2024-11-25 13:50:03',0,'',''),
+(838,'Software',71,'0',13,'tech (4)','2024-11-25 13:50:03',0,'',''),
+(840,'Document',31,'0',20,'tech (4)','2024-11-25 13:50:03',0,'',''),
+(841,'Document',31,'0',13,'tech (4)','2024-11-25 13:50:03',0,'',''),
+(842,'Document',32,'0',20,'tech (4)','2024-11-25 13:50:04',0,'',''),
+(843,'Ticket',1,'',0,'glpi (2)','2024-11-25 14:13:28',1,'Hello World!','ticket1'),
+(844,'Software',73,'0',20,'tech (4)','2024-11-25 14:13:33',0,'',''),
+(845,'Software',74,'0',20,'tech (4)','2024-11-25 14:13:33',0,'',''),
+(846,'Software',75,'0',20,'tech (4)','2024-11-25 14:13:33',0,'',''),
+(847,'Software',76,'0',20,'tech (4)','2024-11-25 14:13:34',0,'',''),
+(848,'Software',76,'0',13,'tech (4)','2024-11-25 14:13:34',0,'',''),
+(850,'Document',33,'0',20,'tech (4)','2024-11-25 14:13:34',0,'',''),
+(851,'Document',33,'0',13,'tech (4)','2024-11-25 14:13:34',0,'',''),
+(852,'Document',34,'0',20,'tech (4)','2024-11-25 14:13:35',0,'',''),
+(853,'Software',78,'0',20,'tech (4)','2024-11-25 14:15:30',0,'',''),
+(854,'Software',79,'0',20,'tech (4)','2024-11-25 14:15:30',0,'',''),
+(855,'Software',80,'0',20,'tech (4)','2024-11-25 14:15:30',0,'',''),
+(856,'Software',81,'0',20,'tech (4)','2024-11-25 14:15:30',0,'',''),
+(857,'Software',81,'0',13,'tech (4)','2024-11-25 14:15:30',0,'',''),
+(859,'Document',35,'0',20,'tech (4)','2024-11-25 14:15:30',0,'',''),
+(860,'Document',35,'0',13,'tech (4)','2024-11-25 14:15:30',0,'',''),
+(861,'Document',36,'0',20,'tech (4)','2024-11-25 14:15:31',0,'',''),
+(862,'Software',83,'0',20,'tech (4)','2024-11-25 14:18:47',0,'',''),
+(863,'Software',84,'0',20,'tech (4)','2024-11-25 14:18:47',0,'',''),
+(864,'Software',85,'0',20,'tech (4)','2024-11-25 14:18:47',0,'',''),
+(865,'Software',86,'0',20,'tech (4)','2024-11-25 14:18:47',0,'',''),
+(866,'Software',86,'0',13,'tech (4)','2024-11-25 14:18:47',0,'',''),
+(868,'Document',37,'0',20,'tech (4)','2024-11-25 14:18:47',0,'',''),
+(869,'Document',37,'0',13,'tech (4)','2024-11-25 14:18:47',0,'',''),
+(870,'Computer',1,'',0,'glpi (2)','2024-11-25 14:20:05',49,'&nbsp; (0)','group1 (1)'),
+(871,'Software',88,'0',20,'tech (4)','2024-11-25 14:20:11',0,'',''),
+(872,'Software',89,'0',20,'tech (4)','2024-11-25 14:20:11',0,'',''),
+(873,'Software',90,'0',20,'tech (4)','2024-11-25 14:20:11',0,'',''),
+(874,'Software',91,'0',20,'tech (4)','2024-11-25 14:20:11',0,'',''),
+(875,'Software',91,'0',13,'tech (4)','2024-11-25 14:20:11',0,'',''),
+(877,'Document',38,'0',20,'tech (4)','2024-11-25 14:20:11',0,'',''),
+(878,'Document',38,'0',13,'tech (4)','2024-11-25 14:20:11',0,'',''),
+(879,'Document',39,'0',20,'tech (4)','2024-11-25 14:20:12',0,'',''),
+(880,'Ticket',2,'User',15,'glpi (2)','2024-11-25 14:21:33',4,'','glpi (2)'),
+(881,'Ticket',2,'',0,'glpi (2)','2024-11-25 14:21:33',150,'0','1'),
+(882,'Ticket',2,'User',15,'glpi (2)','2024-11-25 14:21:33',5,'','glpi (2)'),
+(883,'Ticket',2,'',0,'glpi (2)','2024-11-25 14:21:33',12,'1','2'),
+(884,'Ticket',2,'0',20,'glpi (2)','2024-11-25 14:21:33',0,'',''),
+(885,'Ticket',2,'0',13,'glpi (2)','2024-11-25 14:21:41',0,'',''),
+(886,'Software',93,'0',20,'tech (4)','2024-11-25 14:21:49',0,'',''),
+(887,'Software',94,'0',20,'tech (4)','2024-11-25 14:21:49',0,'',''),
+(888,'Software',95,'0',20,'tech (4)','2024-11-25 14:21:49',0,'',''),
+(889,'Software',96,'0',20,'tech (4)','2024-11-25 14:21:49',0,'',''),
+(890,'Software',96,'0',13,'tech (4)','2024-11-25 14:21:49',0,'',''),
+(892,'Document',40,'0',20,'tech (4)','2024-11-25 14:21:49',0,'',''),
+(893,'Document',40,'0',13,'tech (4)','2024-11-25 14:21:49',0,'',''),
+(894,'Document',41,'0',20,'tech (4)','2024-11-25 14:21:50',0,'',''),
+(895,'Monitor',1,'0',20,'glpi (2)','2024-11-25 14:22:16',0,'',''),
+(896,'Monitor',2,'0',20,'glpi (2)','2024-11-25 14:22:22',0,'',''),
+(897,'Software',98,'0',20,'tech (4)','2024-11-25 14:22:28',0,'',''),
+(898,'Software',99,'0',20,'tech (4)','2024-11-25 14:22:28',0,'',''),
+(899,'Software',100,'0',20,'tech (4)','2024-11-25 14:22:28',0,'',''),
+(900,'Software',101,'0',20,'tech (4)','2024-11-25 14:22:28',0,'',''),
+(901,'Software',101,'0',13,'tech (4)','2024-11-25 14:22:28',0,'',''),
+(903,'Document',42,'0',20,'tech (4)','2024-11-25 14:22:28',0,'',''),
+(904,'Document',42,'0',13,'tech (4)','2024-11-25 14:22:28',0,'',''),
+(905,'Monitor',1,'',0,'tech (4)','2024-11-25 14:22:29',10,'','update uuid'),
+(906,'Monitor',2,'',0,'tech (4)','2024-11-25 14:22:29',10,'','update uid2'),
+(907,'Document',43,'0',20,'tech (4)','2024-11-25 14:22:29',0,'',''),
+(908,'Monitor',1,'',0,'glpi (2)','2024-11-25 14:23:17',1,'Monitor 1','monitor1'),
+(909,'Monitor',2,'',0,'glpi (2)','2024-11-25 14:23:26',1,'Monitor 2','monitor2'),
+(910,'Software',103,'0',20,'tech (4)','2024-11-25 14:23:30',0,'',''),
+(911,'Software',104,'0',20,'tech (4)','2024-11-25 14:23:30',0,'',''),
+(912,'Software',105,'0',20,'tech (4)','2024-11-25 14:23:30',0,'',''),
+(913,'Software',106,'0',20,'tech (4)','2024-11-25 14:23:30',0,'',''),
+(914,'Software',106,'0',13,'tech (4)','2024-11-25 14:23:30',0,'',''),
+(916,'Document',44,'0',20,'tech (4)','2024-11-25 14:23:30',0,'',''),
+(917,'Document',44,'0',13,'tech (4)','2024-11-25 14:23:30',0,'',''),
+(918,'Document',45,'0',20,'tech (4)','2024-11-25 14:23:31',0,'',''),
+(919,'Monitor',2,'',0,'glpi (2)','2024-11-25 14:24:23',11,'0.00','10'),
+(920,'Software',108,'0',20,'tech (4)','2024-11-25 14:24:27',0,'',''),
+(921,'Software',109,'0',20,'tech (4)','2024-11-25 14:24:27',0,'',''),
+(922,'Software',110,'0',20,'tech (4)','2024-11-25 14:24:27',0,'',''),
+(923,'Software',111,'0',20,'tech (4)','2024-11-25 14:24:28',0,'',''),
+(924,'Software',111,'0',13,'tech (4)','2024-11-25 14:24:28',0,'',''),
+(926,'Document',46,'0',20,'tech (4)','2024-11-25 14:24:28',0,'',''),
+(927,'Document',46,'0',13,'tech (4)','2024-11-25 14:24:28',0,'',''),
+(928,'Document',47,'0',20,'tech (4)','2024-11-25 14:24:28',0,'',''),
+(929,'Monitor',1,'',0,'glpi (2)','2024-11-25 14:24:43',11,'0.00','1'),
+(930,'Software',113,'0',20,'tech (4)','2024-11-25 14:24:48',0,'',''),
+(931,'Software',114,'0',20,'tech (4)','2024-11-25 14:24:48',0,'',''),
+(932,'Software',115,'0',20,'tech (4)','2024-11-25 14:24:48',0,'',''),
+(933,'Software',116,'0',20,'tech (4)','2024-11-25 14:24:48',0,'',''),
+(934,'Software',116,'0',13,'tech (4)','2024-11-25 14:24:48',0,'',''),
+(936,'Document',48,'0',20,'tech (4)','2024-11-25 14:24:49',0,'',''),
+(937,'Document',48,'0',13,'tech (4)','2024-11-25 14:24:49',0,'',''),
+(938,'Document',49,'0',20,'tech (4)','2024-11-25 14:24:49',0,'',''),
+(939,'Monitor',1,'',0,'glpi (2)','2024-11-25 14:25:13',11,'1.00','11'),
+(940,'Software',118,'0',20,'tech (4)','2024-11-25 14:25:16',0,'',''),
+(941,'Software',119,'0',20,'tech (4)','2024-11-25 14:25:16',0,'',''),
+(942,'Software',120,'0',20,'tech (4)','2024-11-25 14:25:16',0,'',''),
+(943,'Software',121,'0',20,'tech (4)','2024-11-25 14:25:16',0,'',''),
+(944,'Software',121,'0',13,'tech (4)','2024-11-25 14:25:16',0,'',''),
+(946,'Document',50,'0',20,'tech (4)','2024-11-25 14:25:16',0,'',''),
+(947,'Document',50,'0',13,'tech (4)','2024-11-25 14:25:16',0,'',''),
+(948,'Document',51,'0',20,'tech (4)','2024-11-25 14:25:17',0,'',''),
+(949,'Computer',1,'',0,'glpi (2)','2024-11-25 14:26:27',1,'Test computer','computer1'),
+(950,'Software',123,'0',20,'tech (4)','2024-11-25 14:26:31',0,'',''),
+(951,'Software',124,'0',20,'tech (4)','2024-11-25 14:26:31',0,'',''),
+(952,'Software',125,'0',20,'tech (4)','2024-11-25 14:26:31',0,'',''),
+(953,'Software',126,'0',20,'tech (4)','2024-11-25 14:26:31',0,'',''),
+(954,'Software',126,'0',13,'tech (4)','2024-11-25 14:26:31',0,'',''),
+(956,'Document',52,'0',20,'tech (4)','2024-11-25 14:26:31',0,'',''),
+(957,'Document',52,'0',13,'tech (4)','2024-11-25 14:26:31',0,'',''),
+(958,'Document',53,'0',20,'tech (4)','2024-11-25 14:26:32',0,'',''),
+(959,'Rack',1,'0',20,'glpi (2)','2024-11-25 14:27:39',0,'',''),
+(960,'Rack',1,'',0,'glpi (2)','2024-11-25 14:28:01',16,'','somelog'),
+(961,'Software',128,'0',20,'tech (4)','2024-11-25 14:28:20',0,'',''),
+(962,'Software',129,'0',20,'tech (4)','2024-11-25 14:28:20',0,'',''),
+(963,'Software',130,'0',20,'tech (4)','2024-11-25 14:28:20',0,'',''),
+(964,'Software',131,'0',20,'tech (4)','2024-11-25 14:28:20',0,'',''),
+(965,'Software',131,'0',13,'tech (4)','2024-11-25 14:28:20',0,'',''),
+(967,'Document',54,'0',20,'tech (4)','2024-11-25 14:28:20',0,'',''),
+(968,'Document',54,'0',13,'tech (4)','2024-11-25 14:28:20',0,'',''),
+(969,'Document',55,'0',20,'tech (4)','2024-11-25 14:28:20',0,'',''),
+(970,'Software',133,'0',20,'tech (4)','2024-11-25 14:28:42',0,'',''),
+(971,'Software',134,'0',20,'tech (4)','2024-11-25 14:28:42',0,'',''),
+(972,'Software',135,'0',20,'tech (4)','2024-11-25 14:28:42',0,'',''),
+(973,'Software',136,'0',20,'tech (4)','2024-11-25 14:28:42',0,'',''),
+(974,'Software',136,'0',13,'tech (4)','2024-11-25 14:28:42',0,'',''),
+(976,'Document',56,'0',20,'tech (4)','2024-11-25 14:28:42',0,'',''),
+(977,'Document',56,'0',13,'tech (4)','2024-11-25 14:28:42',0,'',''),
+(978,'Document',57,'0',20,'tech (4)','2024-11-25 14:28:43',0,'',''),
+(979,'Software',138,'0',20,'tech (4)','2024-11-25 14:29:17',0,'',''),
+(980,'Software',139,'0',20,'tech (4)','2024-11-25 14:29:17',0,'',''),
+(981,'Software',140,'0',20,'tech (4)','2024-11-25 14:29:17',0,'',''),
+(982,'Software',141,'0',20,'tech (4)','2024-11-25 14:29:17',0,'',''),
+(983,'Software',141,'0',13,'tech (4)','2024-11-25 14:29:17',0,'',''),
+(985,'Document',58,'0',20,'tech (4)','2024-11-25 14:29:17',0,'',''),
+(986,'Document',58,'0',13,'tech (4)','2024-11-25 14:29:17',0,'',''),
+(987,'Document',59,'0',20,'tech (4)','2024-11-25 14:29:18',0,'',''),
+(988,'Monitor',1,'',0,'glpi (2)','2024-11-25 14:44:12',5,'','1'),
+(989,'Monitor',2,'',0,'glpi (2)','2024-11-25 14:44:19',5,'','2'),
+(990,'Software',143,'0',20,'tech (4)','2024-11-25 14:44:24',0,'',''),
+(991,'Software',144,'0',20,'tech (4)','2024-11-25 14:44:24',0,'',''),
+(992,'Software',145,'0',20,'tech (4)','2024-11-25 14:44:24',0,'',''),
+(993,'Software',146,'0',20,'tech (4)','2024-11-25 14:44:24',0,'',''),
+(994,'Software',146,'0',13,'tech (4)','2024-11-25 14:44:24',0,'',''),
+(996,'Document',60,'0',20,'tech (4)','2024-11-25 14:44:24',0,'',''),
+(997,'Document',60,'0',13,'tech (4)','2024-11-25 14:44:24',0,'',''),
+(998,'Document',61,'0',20,'tech (4)','2024-11-25 14:44:25',0,'',''),
+(999,'Monitor',2,'',0,'glpi (2)','2024-11-25 14:44:32',5,'2','1'),
+(1000,'Monitor',2,'',0,'glpi (2)','2024-11-25 14:44:40',5,'1','2'),
+(1001,'Software',148,'0',20,'tech (4)','2024-11-25 14:44:52',0,'',''),
+(1002,'Software',149,'0',20,'tech (4)','2024-11-25 14:44:52',0,'',''),
+(1003,'Software',150,'0',20,'tech (4)','2024-11-25 14:44:52',0,'',''),
+(1004,'Software',151,'0',20,'tech (4)','2024-11-25 14:44:52',0,'',''),
+(1005,'Software',151,'0',13,'tech (4)','2024-11-25 14:44:52',0,'',''),
+(1007,'Document',62,'0',20,'tech (4)','2024-11-25 14:44:52',0,'',''),
+(1008,'Document',62,'0',13,'tech (4)','2024-11-25 14:44:52',0,'',''),
+(1009,'Document',63,'0',20,'tech (4)','2024-11-25 14:44:53',0,'',''),
+(1010,'Software',153,'0',20,'tech (4)','2024-11-25 14:46:06',0,'',''),
+(1011,'Software',154,'0',20,'tech (4)','2024-11-25 14:46:06',0,'',''),
+(1012,'Software',155,'0',20,'tech (4)','2024-11-25 14:46:06',0,'',''),
+(1013,'Software',156,'0',20,'tech (4)','2024-11-25 14:46:06',0,'',''),
+(1014,'Software',156,'0',13,'tech (4)','2024-11-25 14:46:06',0,'',''),
+(1016,'Document',64,'0',20,'tech (4)','2024-11-25 14:46:06',0,'',''),
+(1017,'Document',64,'0',13,'tech (4)','2024-11-25 14:46:06',0,'',''),
+(1018,'Software',158,'0',20,'tech (4)','2024-11-25 14:47:56',0,'',''),
+(1019,'Software',159,'0',20,'tech (4)','2024-11-25 14:47:56',0,'',''),
+(1020,'Software',160,'0',20,'tech (4)','2024-11-25 14:47:56',0,'',''),
+(1021,'Software',161,'0',20,'tech (4)','2024-11-25 14:47:56',0,'',''),
+(1022,'Software',161,'0',13,'tech (4)','2024-11-25 14:47:56',0,'',''),
+(1024,'Document',65,'0',20,'tech (4)','2024-11-25 14:47:56',0,'',''),
+(1025,'Document',65,'0',13,'tech (4)','2024-11-25 14:47:56',0,'',''),
+(1026,'Document',66,'0',20,'tech (4)','2024-11-25 14:47:56',0,'',''),
+(1027,'Monitor',1,'',0,'glpi (2)','2024-11-25 14:51:17',5,'1','2'),
+(1028,'Monitor',2,'',0,'glpi (2)','2024-11-25 14:51:22',5,'2','1'),
+(1029,'Software',163,'0',20,'tech (4)','2024-11-25 14:51:26',0,'',''),
+(1030,'Software',164,'0',20,'tech (4)','2024-11-25 14:51:26',0,'',''),
+(1031,'Software',165,'0',20,'tech (4)','2024-11-25 14:51:26',0,'',''),
+(1032,'Software',166,'0',20,'tech (4)','2024-11-25 14:51:26',0,'',''),
+(1033,'Software',166,'0',13,'tech (4)','2024-11-25 14:51:26',0,'',''),
+(1035,'Document',67,'0',20,'tech (4)','2024-11-25 14:51:26',0,'',''),
+(1036,'Document',67,'0',13,'tech (4)','2024-11-25 14:51:26',0,'',''),
+(1037,'Document',68,'0',20,'tech (4)','2024-11-25 14:51:27',0,'',''),
+(1038,'Software',168,'0',20,'tech (4)','2024-11-25 14:51:38',0,'',''),
+(1039,'Software',169,'0',20,'tech (4)','2024-11-25 14:51:38',0,'',''),
+(1040,'Software',170,'0',20,'tech (4)','2024-11-25 14:51:38',0,'',''),
+(1041,'Software',171,'0',20,'tech (4)','2024-11-25 14:51:38',0,'',''),
+(1042,'Software',171,'0',13,'tech (4)','2024-11-25 14:51:38',0,'',''),
+(1044,'Document',69,'0',20,'tech (4)','2024-11-25 14:51:38',0,'',''),
+(1045,'Document',69,'0',13,'tech (4)','2024-11-25 14:51:38',0,'',''),
+(1046,'Document',70,'0',20,'tech (4)','2024-11-25 14:51:39',0,'',''),
+(1047,'Software',173,'0',20,'tech (4)','2024-11-25 14:52:17',0,'',''),
+(1048,'Software',174,'0',20,'tech (4)','2024-11-25 14:52:17',0,'',''),
+(1049,'Software',175,'0',20,'tech (4)','2024-11-25 14:52:17',0,'',''),
+(1050,'Software',176,'0',20,'tech (4)','2024-11-25 14:52:17',0,'',''),
+(1051,'Software',176,'0',13,'tech (4)','2024-11-25 14:52:17',0,'',''),
+(1053,'Document',71,'0',20,'tech (4)','2024-11-25 14:52:17',0,'',''),
+(1054,'Document',71,'0',13,'tech (4)','2024-11-25 14:52:17',0,'',''),
+(1055,'Document',72,'0',20,'tech (4)','2024-11-25 14:52:18',0,'','');
 /*!40000 ALTER TABLE `glpi_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -9811,7 +10285,7 @@ CREATE TABLE `glpi_monitors` (
   KEY `date_creation` (`date_creation`),
   KEY `is_recursive` (`is_recursive`),
   KEY `date_mod` (`date_mod`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -9820,6 +10294,9 @@ CREATE TABLE `glpi_monitors` (
 
 LOCK TABLES `glpi_monitors` WRITE;
 /*!40000 ALTER TABLE `glpi_monitors` DISABLE KEYS */;
+INSERT INTO `glpi_monitors` VALUES
+(1,0,'monitor1','2024-11-25 14:51:17','','',0,0,'','2','',11.00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,NULL,0,0,0,0.0000,0,0,'update uuid','2024-11-25 14:22:16',0),
+(2,0,'monitor2','2024-11-25 14:51:22','','',0,0,'','1','',10.00,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,NULL,0,0,0,0.0000,0,0,'update uid2','2024-11-25 14:22:22',0);
 /*!40000 ALTER TABLE `glpi_monitors` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -14294,7 +14771,7 @@ CREATE TABLE `glpi_profiles_users` (
   KEY `users_id` (`users_id`),
   KEY `is_recursive` (`is_recursive`),
   KEY `is_dynamic` (`is_dynamic`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -14307,7 +14784,8 @@ INSERT INTO `glpi_profiles_users` VALUES
 (2,2,4,0,1,0,0),
 (3,3,1,0,1,0,0),
 (4,4,6,0,1,0,0),
-(5,5,2,0,1,0,0);
+(5,5,2,0,1,0,0),
+(6,4,4,0,0,0,0);
 /*!40000 ALTER TABLE `glpi_profiles_users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -14890,7 +15368,7 @@ CREATE TABLE `glpi_racks` (
   KEY `dcrooms_id` (`dcrooms_id`),
   KEY `date_creation` (`date_creation`),
   KEY `date_mod` (`date_mod`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -14899,6 +15377,8 @@ CREATE TABLE `glpi_racks` (
 
 LOCK TABLES `glpi_racks` WRITE;
 /*!40000 ALTER TABLE `glpi_racks` DISABLE KEYS */;
+INSERT INTO `glpi_racks` VALUES
+(1,'rack1','somelog',0,0,0,'','',0,0,0,0,0,0,0,0,0,42,0,NULL,0,0,1,NULL,'#fec95c',0,0,0,'2024-11-25 14:28:01','2024-11-25 14:27:39');
 /*!40000 ALTER TABLE `glpi_racks` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -16508,7 +16988,7 @@ CREATE TABLE `glpi_softwares` (
   KEY `is_helpdesk_visible` (`is_helpdesk_visible`),
   KEY `groups_id_tech` (`groups_id_tech`),
   KEY `date_creation` (`date_creation`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=178 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -16517,6 +16997,147 @@ CREATE TABLE `glpi_softwares` (
 
 LOCK TABLES `glpi_softwares` WRITE;
 /*!40000 ALTER TABLE `glpi_softwares` DISABLE KEYS */;
+INSERT INTO `glpi_softwares` VALUES
+(1,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 12:21:44',0,0,0.0000,1,0,1,'2024-11-25 12:21:44',NULL),
+(2,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 12:21:45',0,0,0.0000,1,0,1,'2024-11-25 12:21:45',NULL),
+(3,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 12:21:45',0,0,0.0000,1,0,1,'2024-11-25 12:21:45',NULL),
+(5,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 12:41:14',0,0,0.0000,1,0,1,'2024-11-25 12:41:14',NULL),
+(6,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 12:41:14',0,0,0.0000,1,0,1,'2024-11-25 12:41:14',NULL),
+(7,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 12:41:14',0,0,0.0000,1,0,1,'2024-11-25 12:41:14',NULL),
+(9,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 12:41:27',0,0,0.0000,1,0,1,'2024-11-25 12:41:27',NULL),
+(10,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 12:41:27',0,0,0.0000,1,0,1,'2024-11-25 12:41:27',NULL),
+(11,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 12:41:27',0,0,0.0000,1,0,1,'2024-11-25 12:41:27',NULL),
+(13,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 12:46:57',0,0,0.0000,1,0,1,'2024-11-25 12:46:57',NULL),
+(14,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 12:46:57',0,0,0.0000,1,0,1,'2024-11-25 12:46:57',NULL),
+(15,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 12:46:57',0,0,0.0000,1,0,1,'2024-11-25 12:46:57',NULL),
+(17,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 12:48:24',0,0,0.0000,1,0,1,'2024-11-25 12:48:24',NULL),
+(18,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 12:48:24',0,0,0.0000,1,0,1,'2024-11-25 12:48:24',NULL),
+(19,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 12:48:24',0,0,0.0000,1,0,1,'2024-11-25 12:48:24',NULL),
+(21,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 12:52:37',0,0,0.0000,1,0,1,'2024-11-25 12:52:37',NULL),
+(22,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 12:52:37',0,0,0.0000,1,0,1,'2024-11-25 12:52:37',NULL),
+(23,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 12:52:37',0,0,0.0000,1,0,1,'2024-11-25 12:52:37',NULL),
+(25,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:40:37',0,0,0.0000,1,0,1,'2024-11-25 13:40:37',NULL),
+(26,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:40:37',0,0,0.0000,1,0,1,'2024-11-25 13:40:37',NULL),
+(27,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:40:37',0,0,0.0000,1,0,1,'2024-11-25 13:40:37',NULL),
+(29,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:41:10',0,0,0.0000,1,0,1,'2024-11-25 13:41:10',NULL),
+(30,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:41:10',0,0,0.0000,1,0,1,'2024-11-25 13:41:10',NULL),
+(31,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:41:10',0,0,0.0000,1,0,1,'2024-11-25 13:41:10',NULL),
+(33,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:41:37',0,0,0.0000,1,0,1,'2024-11-25 13:41:37',NULL),
+(34,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:41:37',0,0,0.0000,1,0,1,'2024-11-25 13:41:37',NULL),
+(35,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:41:37',0,0,0.0000,1,0,1,'2024-11-25 13:41:37',NULL),
+(36,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 13:41:37',0,0,0.0000,1,0,1,'2024-11-25 13:41:37',NULL),
+(38,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:42:46',0,0,0.0000,1,0,1,'2024-11-25 13:42:46',NULL),
+(39,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:42:46',0,0,0.0000,1,0,1,'2024-11-25 13:42:46',NULL),
+(40,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:42:46',0,0,0.0000,1,0,1,'2024-11-25 13:42:46',NULL),
+(41,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 13:42:46',0,0,0.0000,1,0,1,'2024-11-25 13:42:46',NULL),
+(43,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:43:26',0,0,0.0000,1,0,1,'2024-11-25 13:43:26',NULL),
+(44,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:43:26',0,0,0.0000,1,0,1,'2024-11-25 13:43:26',NULL),
+(45,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:43:26',0,0,0.0000,1,0,1,'2024-11-25 13:43:26',NULL),
+(46,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 13:43:26',0,0,0.0000,1,0,1,'2024-11-25 13:43:26',NULL),
+(48,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:46:07',0,0,0.0000,1,0,1,'2024-11-25 13:46:07',NULL),
+(49,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:46:07',0,0,0.0000,1,0,1,'2024-11-25 13:46:07',NULL),
+(50,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:46:07',0,0,0.0000,1,0,1,'2024-11-25 13:46:07',NULL),
+(51,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 13:46:07',0,0,0.0000,1,0,1,'2024-11-25 13:46:07',NULL),
+(53,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:46:46',0,0,0.0000,1,0,1,'2024-11-25 13:46:46',NULL),
+(54,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:46:46',0,0,0.0000,1,0,1,'2024-11-25 13:46:46',NULL),
+(55,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:46:46',0,0,0.0000,1,0,1,'2024-11-25 13:46:46',NULL),
+(56,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 13:46:46',0,0,0.0000,1,0,1,'2024-11-25 13:46:46',NULL),
+(58,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:48:24',0,0,0.0000,1,0,1,'2024-11-25 13:48:24',NULL),
+(59,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:48:24',0,0,0.0000,1,0,1,'2024-11-25 13:48:24',NULL),
+(60,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:48:24',0,0,0.0000,1,0,1,'2024-11-25 13:48:24',NULL),
+(61,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 13:48:24',0,0,0.0000,1,0,1,'2024-11-25 13:48:24',NULL),
+(63,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:49:50',0,0,0.0000,1,0,1,'2024-11-25 13:49:50',NULL),
+(64,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:49:50',0,0,0.0000,1,0,1,'2024-11-25 13:49:50',NULL),
+(65,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:49:50',0,0,0.0000,1,0,1,'2024-11-25 13:49:50',NULL),
+(66,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 13:49:50',0,0,0.0000,1,0,1,'2024-11-25 13:49:50',NULL),
+(68,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:50:03',0,0,0.0000,1,0,1,'2024-11-25 13:50:03',NULL),
+(69,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:50:03',0,0,0.0000,1,0,1,'2024-11-25 13:50:03',NULL),
+(70,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 13:50:03',0,0,0.0000,1,0,1,'2024-11-25 13:50:03',NULL),
+(71,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 13:50:03',0,0,0.0000,1,0,1,'2024-11-25 13:50:03',NULL),
+(73,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:13:33',0,0,0.0000,1,0,1,'2024-11-25 14:13:33',NULL),
+(74,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:13:33',0,0,0.0000,1,0,1,'2024-11-25 14:13:33',NULL),
+(75,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:13:33',0,0,0.0000,1,0,1,'2024-11-25 14:13:33',NULL),
+(76,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:13:34',0,0,0.0000,1,0,1,'2024-11-25 14:13:34',NULL),
+(78,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:15:30',0,0,0.0000,1,0,1,'2024-11-25 14:15:30',NULL),
+(79,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:15:30',0,0,0.0000,1,0,1,'2024-11-25 14:15:30',NULL),
+(80,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:15:30',0,0,0.0000,1,0,1,'2024-11-25 14:15:30',NULL),
+(81,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:15:30',0,0,0.0000,1,0,1,'2024-11-25 14:15:30',NULL),
+(83,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:18:47',0,0,0.0000,1,0,1,'2024-11-25 14:18:47',NULL),
+(84,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:18:47',0,0,0.0000,1,0,1,'2024-11-25 14:18:47',NULL),
+(85,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:18:47',0,0,0.0000,1,0,1,'2024-11-25 14:18:47',NULL),
+(86,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:18:47',0,0,0.0000,1,0,1,'2024-11-25 14:18:47',NULL),
+(88,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:20:11',0,0,0.0000,1,0,1,'2024-11-25 14:20:11',NULL),
+(89,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:20:11',0,0,0.0000,1,0,1,'2024-11-25 14:20:11',NULL),
+(90,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:20:11',0,0,0.0000,1,0,1,'2024-11-25 14:20:11',NULL),
+(91,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:20:11',0,0,0.0000,1,0,1,'2024-11-25 14:20:11',NULL),
+(93,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:21:49',0,0,0.0000,1,0,1,'2024-11-25 14:21:49',NULL),
+(94,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:21:49',0,0,0.0000,1,0,1,'2024-11-25 14:21:49',NULL),
+(95,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:21:49',0,0,0.0000,1,0,1,'2024-11-25 14:21:49',NULL),
+(96,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:21:49',0,0,0.0000,1,0,1,'2024-11-25 14:21:49',NULL),
+(98,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:22:28',0,0,0.0000,1,0,1,'2024-11-25 14:22:28',NULL),
+(99,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:22:28',0,0,0.0000,1,0,1,'2024-11-25 14:22:28',NULL),
+(100,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:22:28',0,0,0.0000,1,0,1,'2024-11-25 14:22:28',NULL),
+(101,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:22:28',0,0,0.0000,1,0,1,'2024-11-25 14:22:28',NULL),
+(103,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:23:30',0,0,0.0000,1,0,1,'2024-11-25 14:23:30',NULL),
+(104,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:23:30',0,0,0.0000,1,0,1,'2024-11-25 14:23:30',NULL),
+(105,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:23:30',0,0,0.0000,1,0,1,'2024-11-25 14:23:30',NULL),
+(106,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:23:30',0,0,0.0000,1,0,1,'2024-11-25 14:23:30',NULL),
+(108,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:24:27',0,0,0.0000,1,0,1,'2024-11-25 14:24:27',NULL),
+(109,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:24:27',0,0,0.0000,1,0,1,'2024-11-25 14:24:27',NULL),
+(110,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:24:27',0,0,0.0000,1,0,1,'2024-11-25 14:24:27',NULL),
+(111,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:24:28',0,0,0.0000,1,0,1,'2024-11-25 14:24:28',NULL),
+(113,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:24:48',0,0,0.0000,1,0,1,'2024-11-25 14:24:48',NULL),
+(114,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:24:48',0,0,0.0000,1,0,1,'2024-11-25 14:24:48',NULL),
+(115,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:24:48',0,0,0.0000,1,0,1,'2024-11-25 14:24:48',NULL),
+(116,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:24:48',0,0,0.0000,1,0,1,'2024-11-25 14:24:48',NULL),
+(118,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:25:16',0,0,0.0000,1,0,1,'2024-11-25 14:25:16',NULL),
+(119,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:25:16',0,0,0.0000,1,0,1,'2024-11-25 14:25:16',NULL),
+(120,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:25:16',0,0,0.0000,1,0,1,'2024-11-25 14:25:16',NULL),
+(121,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:25:16',0,0,0.0000,1,0,1,'2024-11-25 14:25:16',NULL),
+(123,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:26:31',0,0,0.0000,1,0,1,'2024-11-25 14:26:31',NULL),
+(124,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:26:31',0,0,0.0000,1,0,1,'2024-11-25 14:26:31',NULL),
+(125,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:26:31',0,0,0.0000,1,0,1,'2024-11-25 14:26:31',NULL),
+(126,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:26:31',0,0,0.0000,1,0,1,'2024-11-25 14:26:31',NULL),
+(128,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:28:20',0,0,0.0000,1,0,1,'2024-11-25 14:28:20',NULL),
+(129,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:28:20',0,0,0.0000,1,0,1,'2024-11-25 14:28:20',NULL),
+(130,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:28:20',0,0,0.0000,1,0,1,'2024-11-25 14:28:20',NULL),
+(131,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:28:20',0,0,0.0000,1,0,1,'2024-11-25 14:28:20',NULL),
+(133,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:28:42',0,0,0.0000,1,0,1,'2024-11-25 14:28:42',NULL),
+(134,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:28:42',0,0,0.0000,1,0,1,'2024-11-25 14:28:42',NULL),
+(135,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:28:42',0,0,0.0000,1,0,1,'2024-11-25 14:28:42',NULL),
+(136,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:28:42',0,0,0.0000,1,0,1,'2024-11-25 14:28:42',NULL),
+(138,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:29:17',0,0,0.0000,1,0,1,'2024-11-25 14:29:17',NULL),
+(139,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:29:17',0,0,0.0000,1,0,1,'2024-11-25 14:29:17',NULL),
+(140,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:29:17',0,0,0.0000,1,0,1,'2024-11-25 14:29:17',NULL),
+(141,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:29:17',0,0,0.0000,1,0,1,'2024-11-25 14:29:17',NULL),
+(143,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:44:24',0,0,0.0000,1,0,1,'2024-11-25 14:44:24',NULL),
+(144,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:44:24',0,0,0.0000,1,0,1,'2024-11-25 14:44:24',NULL),
+(145,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:44:24',0,0,0.0000,1,0,1,'2024-11-25 14:44:24',NULL),
+(146,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:44:24',0,0,0.0000,1,0,1,'2024-11-25 14:44:24',NULL),
+(148,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:44:52',0,0,0.0000,1,0,1,'2024-11-25 14:44:52',NULL),
+(149,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:44:52',0,0,0.0000,1,0,1,'2024-11-25 14:44:52',NULL),
+(150,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:44:52',0,0,0.0000,1,0,1,'2024-11-25 14:44:52',NULL),
+(151,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:44:52',0,0,0.0000,1,0,1,'2024-11-25 14:44:52',NULL),
+(153,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:46:06',0,0,0.0000,1,0,1,'2024-11-25 14:46:06',NULL),
+(154,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:46:06',0,0,0.0000,1,0,1,'2024-11-25 14:46:06',NULL),
+(155,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:46:06',0,0,0.0000,1,0,1,'2024-11-25 14:46:06',NULL),
+(156,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:46:06',0,0,0.0000,1,0,1,'2024-11-25 14:46:06',NULL),
+(158,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:47:56',0,0,0.0000,1,0,1,'2024-11-25 14:47:56',NULL),
+(159,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:47:56',0,0,0.0000,1,0,1,'2024-11-25 14:47:56',NULL),
+(160,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:47:56',0,0,0.0000,1,0,1,'2024-11-25 14:47:56',NULL),
+(161,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:47:56',0,0,0.0000,1,0,1,'2024-11-25 14:47:56',NULL),
+(163,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:51:26',0,0,0.0000,1,0,1,'2024-11-25 14:51:26',NULL),
+(164,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:51:26',0,0,0.0000,1,0,1,'2024-11-25 14:51:26',NULL),
+(165,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:51:26',0,0,0.0000,1,0,1,'2024-11-25 14:51:26',NULL),
+(166,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:51:26',0,0,0.0000,1,0,1,'2024-11-25 14:51:26',NULL),
+(168,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:51:38',0,0,0.0000,1,0,1,'2024-11-25 14:51:38',NULL),
+(169,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:51:38',0,0,0.0000,1,0,1,'2024-11-25 14:51:38',NULL),
+(170,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:51:38',0,0,0.0000,1,0,1,'2024-11-25 14:51:38',NULL),
+(171,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:51:38',0,0,0.0000,1,0,1,'2024-11-25 14:51:38',NULL),
+(173,0,0,'software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:52:17',0,0,0.0000,1,0,1,'2024-11-25 14:52:17',NULL),
+(174,0,0,'second software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:52:17',0,0,0.0000,1,0,1,'2024-11-25 14:52:17',NULL),
+(175,0,0,'third software added',NULL,0,0,0,0,0,0,0,0,NULL,'2024-11-25 14:52:17',0,0,0.0000,1,0,1,'2024-11-25 14:52:17',NULL),
+(176,0,0,'software deleted',NULL,0,0,0,0,0,0,1,0,NULL,'2024-11-25 14:52:17',0,0,0.0000,1,0,1,'2024-11-25 14:52:17',NULL);
 /*!40000 ALTER TABLE `glpi_softwares` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -17107,7 +17728,7 @@ CREATE TABLE `glpi_tickets` (
   KEY `date_creation` (`date_creation`),
   KEY `ola_waiting_duration` (`ola_waiting_duration`),
   KEY `olalevels_id_ttr` (`olalevels_id_ttr`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -17117,7 +17738,8 @@ CREATE TABLE `glpi_tickets` (
 LOCK TABLES `glpi_tickets` WRITE;
 /*!40000 ALTER TABLE `glpi_tickets` DISABLE KEYS */;
 INSERT INTO `glpi_tickets` VALUES
-(1,0,'Hello World!','2024-11-19 10:27:53',NULL,NULL,'2024-11-19 10:27:53','2024-11-19 10:27:53',2,2,2,1,'&#60;p&#62;Hello World!&#60;/p&#62;',3,3,3,0,1,1,0,0,0,NULL,NULL,NULL,0,0,0,0,0,NULL,NULL,NULL,NULL,0,0,0,1,0,0,0,0,'2024-11-19 10:27:53');
+(1,0,'ticket1','2024-11-19 10:27:53',NULL,NULL,'2024-11-19 10:27:53','2024-11-25 14:13:28',2,2,2,1,'&#60;p&#62;Hello World!&#60;/p&#62;',3,3,3,0,1,1,0,0,0,NULL,NULL,NULL,0,0,0,0,0,NULL,NULL,NULL,NULL,0,0,0,1,0,0,0,0,'2024-11-19 10:27:53'),
+(2,0,'Deleted ticket','2024-11-25 14:21:33',NULL,NULL,'2024-11-25 14:21:33','2024-11-25 14:21:41',2,2,2,1,'&#60;p&#62;Text&#60;/p&#62;',3,3,3,0,1,1,0,0,0,NULL,NULL,NULL,0,0,0,0,0,NULL,NULL,NULL,NULL,0,0,0,1,0,1,0,0,'2024-11-25 14:21:33');
 /*!40000 ALTER TABLE `glpi_tickets` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -17191,7 +17813,7 @@ CREATE TABLE `glpi_tickets_users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `unicity` (`tickets_id`,`type`,`users_id`,`alternative_email`),
   KEY `user` (`users_id`,`type`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -17202,7 +17824,9 @@ LOCK TABLES `glpi_tickets_users` WRITE;
 /*!40000 ALTER TABLE `glpi_tickets_users` DISABLE KEYS */;
 INSERT INTO `glpi_tickets_users` VALUES
 (1,1,2,1,0,''),
-(2,1,2,2,0,'');
+(2,1,2,2,0,''),
+(3,2,2,1,0,''),
+(4,2,2,2,0,'');
 /*!40000 ALTER TABLE `glpi_tickets_users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -17703,7 +18327,7 @@ CREATE TABLE `glpi_users` (
   `date_sync` timestamp NULL DEFAULT NULL,
   `is_deleted` tinyint(4) NOT NULL DEFAULT 0,
   `profiles_id` int(10) unsigned NOT NULL DEFAULT 0,
-  `entities_id` int(10) unsigned NOT NULL DEFAULT 0,
+  `entities_id` int(10) unsigned DEFAULT 0,
   `usertitles_id` int(10) unsigned NOT NULL DEFAULT 0,
   `usercategories_id` int(10) unsigned NOT NULL DEFAULT 0,
   `date_format` int(11) DEFAULT NULL,
@@ -17815,9 +18439,9 @@ CREATE TABLE `glpi_users` (
 LOCK TABLES `glpi_users` WRITE;
 /*!40000 ALTER TABLE `glpi_users` DISABLE KEYS */;
 INSERT INTO `glpi_users` VALUES
-(2,'glpi','$2y$10$rXXzbc2ShaiCldwkw4AZL.n.9QSH7c0c9XJAyyjrbL9BwmWditAYm',NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,0,20,1,NULL,0,1,'2024-11-19 10:20:28','2024-11-19 10:20:28',NULL,0,0,0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'$2y$10$pERd8NYLw8WSdhfftaS3BOYXZIQO5RXbAe04bX.reOPaSrhaDJaKq','2024-11-19 10:20:28',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(2,'glpi','$2y$10$rXXzbc2ShaiCldwkw4AZL.n.9QSH7c0c9XJAyyjrbL9BwmWditAYm',NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,0,20,1,NULL,0,1,'2024-11-25 13:42:24','2024-11-25 12:24:02',NULL,0,0,0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'$2y$10$PS7Yd1LbhwN4dlL5wlvQEeYiBlDX6XBMDq4OZOLI5k4aCnEQIJPnO','2024-11-25 12:24:02',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (3,'post-only','$2y$10$dTMar1F3ef5X/H1IjX9gYOjQWBR1K4bERGf4/oTPxFtJE/c3vXILm',NULL,NULL,NULL,NULL,NULL,NULL,0,'en_GB',0,20,1,NULL,0,1,NULL,NULL,NULL,0,0,0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,0,0,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL),
-(4,'tech','$2y$10$.xEgErizkp6Az0z.DHyoeOoenuh0RcsX4JapBk2JMD6VI17KtB1lO',NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,0,20,1,NULL,0,1,'2024-11-19 10:27:13','2024-11-19 10:27:13',NULL,0,0,0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'LoU4vhqZ2pRZRyoNe8PpxyTDxkPzBVh6JD4rx6zy','2024-11-19 10:21:49',NULL,'2024-11-19 10:20:18',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(4,'tech','$2y$10$.xEgErizkp6Az0z.DHyoeOoenuh0RcsX4JapBk2JMD6VI17KtB1lO',NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,0,20,1,NULL,0,1,'2024-11-25 14:52:17','2024-11-25 13:42:36',NULL,0,0,0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'LoU4vhqZ2pRZRyoNe8PpxyTDxkPzBVh6JD4rx6zy','2024-11-19 10:21:49',NULL,'2024-11-19 10:20:18',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,'8a/4_67447ecce048a.jpg',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (5,'normal','$2y$10$Z6doq4zVHkSPZFbPeXTCluN1Q/r0ryZ3ZsSJncJqkN3.8cRiN0NV.',NULL,NULL,NULL,NULL,NULL,NULL,0,'en_GB',0,20,1,NULL,0,1,NULL,NULL,NULL,0,0,0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,0,0,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL),
 (6,'glpi-system','',NULL,NULL,NULL,NULL,'Support',NULL,0,NULL,0,NULL,1,NULL,0,1,NULL,NULL,NULL,0,0,0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,0,0,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `glpi_users` ENABLE KEYS */;
@@ -18050,4 +18674,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2024-11-19  7:35:43
+-- Dump completed on 2024-11-25 14:54:00
