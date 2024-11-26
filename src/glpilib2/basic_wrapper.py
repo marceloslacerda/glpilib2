@@ -20,13 +20,14 @@ JSON = Dict[str, Any]
 
 class SortOrder(Enum):
     """Handy :class:`~enum.Enum` for ordering queries.
-    
+
     Attributes
     ----------
 
     Ascending
     Desceding
     """
+
     Ascending = "ASC"
     Descending = "DESC"
 
@@ -37,12 +38,12 @@ class SortOrder(Enum):
 @dataclass
 class ResponseRange:
     """Range of a query.
-    
+
     Some API methods produce a response in the header that describe the range of
     the query. That data is collected and wrapped in this type of object.
     To obtain it use the :meth:`~RequestHandler.response_range`
     property of :class:`RequestHandler`.
-    
+
     Attributes
     ----------
     start: int
@@ -157,7 +158,7 @@ class RequestHandler:
         """Returns the `ResponseRange` of the previous API call
 
         Set when methods that return multiple items are called.
-        
+
         """
         if self.__response_header is None:
             raise AttributeError("No request made")
@@ -228,7 +229,7 @@ class RequestHandler:
     def init_session(self):
         """Request a :meth:`~RequestHandler.session_token` to be used by the
         other methods.
-        
+
         """
         if self.__session_token is not None:
             raise AttributeError("Session already initialized.")
@@ -415,7 +416,9 @@ class RequestHandler:
         headers = self._header_dict(headers)
         if self.__session is None:
             self.__session = requests.Session()
-        logger.debug(f"Calling method {method} on {api_method_url} with {data=} and {headers=}")
+        logger.debug(
+            f"Calling method {method} on {api_method_url} with {data=} and {headers=}"
+        )
         r = getattr(self.__session, method)(
             url, headers=headers, verify=self.verify_tls, json=data, files=files
         )
@@ -442,7 +445,7 @@ class RequestHandler:
 
     def get_my_entities(self, recursive: bool = False) -> List[JSON]:
         """Return all the entities of the current logged user.
-        
+
         Also returns entities related to the current active profile.
 
         Examples
@@ -479,7 +482,7 @@ class RequestHandler:
 
     def change_active_entity(self, entity_id: int):
         """Change active entity to `entity_id`.
-        
+
         Use :meth:`~RequestHandler.get_my_entities` method to know that are the viable entities.
 
         Warnings
@@ -642,7 +645,7 @@ class RequestHandler:
             Show dropdown name instead of `id`.
         get_hateoas : bool, default True
             Show relations of the item in a `links` attribute.
-            
+
             See: https://en.wikipedia.org/wiki/HATEOAS
 
             Can't be disabled due to a bug in the API.
@@ -721,7 +724,7 @@ class RequestHandler:
             Show dropdown name instead of `id`.
         get_hateoas : bool, default True
             Show relations of the item in a `links` attribute.
-            
+
             See: https://en.wikipedia.org/wiki/HATEOAS
 
             Can't be disabled due to a bug in the API.
@@ -767,7 +770,7 @@ class RequestHandler:
         self, item_type: str, raw: bool = False, pretty=False
     ) -> JSON:
         """List the search options of the provided `itemtype`.
-        
+
         This method provides the options you need for self.search_items.
 
         Parameters
@@ -867,7 +870,7 @@ class RequestHandler:
             first object).
                 link: str
                     A logical operator of AND, OR, AND NOT
-        
+
             `Filter objects` keys are objects that narrow down the query. Their keys are:
                 field: int
                     The id of the `search_option`.
@@ -885,7 +888,7 @@ class RequestHandler:
             single unique key is:
                 criteria: List[Dict[str, Any]]
                     A list of `Filter objects`
-            
+
             An example of `filters` parameter can be found in the examples section.
         sort_by_id: int, default None
             `id` of the `search_option` to sort by.
@@ -899,7 +902,7 @@ class RequestHandler:
             **Note**: The API documentation says that some columns will always be
             displayed, those are `{1: id, 2: name, 80: Entity}`. However that's not the
             observed behaviour. Only `{1: id}` seems to always be displayed.
-        
+
         raw_data: bool, default False
             If set debug information about the query is returned in a `rawdata` field.
             The results contain the SQL, the search filters as interpreted by the
@@ -999,9 +1002,9 @@ class RequestHandler:
         }
 
         The above filter variable is roughly equivalent to the expression.
-        
+
         >>> [m for m in Monitors if (
-        ...        field[31] == 1 
+        ...        field[31] == 1
         ...        and User.field[1] == 1
         ...        and (
         ...            field[34] == 1
@@ -1102,7 +1105,7 @@ class RequestHandler:
         -------
         List[Dict]
             Each field has the form `{'id': 2, 'message': ''}`
-        
+
         Notes
         -----
         As with the `add_items` method, this method is highly permissive and will not
@@ -1161,7 +1164,7 @@ class RequestHandler:
             you can set this variable. Ex: 'my_filename.png'
             If unset it will try to obtain a name from the `file` to use as the
             `file_name`.
-        
+
         """
         manifest = json.dumps({"input": {"name": name, "_filename": [file_name]}})
 
