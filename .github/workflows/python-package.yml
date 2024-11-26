@@ -25,7 +25,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        apt-get install -y docker-compose
+        sudo apt-get install -y docker-compose
         python -m pip install --upgrade pip
         python -m pip install black pytest
         pip install .
@@ -38,4 +38,4 @@ jobs:
         ./docker-stuff/bootstrap-run.sh
         ./run-test.sh
         cd docker-stuff
-        docker-compose down
+        docker compose down
