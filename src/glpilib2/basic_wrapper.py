@@ -3,6 +3,7 @@ import inspect
 import json
 import logging
 import re
+
 from dataclasses import dataclass
 from enum import Enum
 from json import JSONDecodeError
@@ -63,6 +64,29 @@ class ResponseRange:
 
     def __repr__(self):
         return f"{str(self.start)}-{str(self.start)}/{self.count} Max: {self.max}"
+
+
+class GLPIError(Exception):
+    pass
+
+
+class GLPIRequestError(GLPIError):
+    def __init__(self, response: requests.Response, args=None):
+        self.error_code = response.status_code
+        self.error_message = response.text
+        self.request_headers = response.request.headers
+        self.payload = response.request.body
+        self.url = response.url
+        self.method = response.request.method
+        self.response = response
+        if self.args:
+            self.args = tuple()
+
+    def __repr__(self):
+        url = ".../" + self.url.split("/")[1]
+        msg = f"GLPIError({url=}, method={self.method}, code={self.error_code})="
+        error = self.error_message[: (80 - len(msg))]
+        return msg + error
 
 
 class RequestHandler:
@@ -161,12 +185,12 @@ class RequestHandler:
 
         """
         if self.__response_header is None:
-            raise AttributeError("No request made")
+            raise GLPIError("No request made")
         elif (
             "Content-Range" not in self.__response_header
             or "Accept-Range" not in self.__response_header
         ):
-            raise AttributeError("The previous request did not return a range")
+            raise GLPIError("The previous request did not return a range")
         else:
             content_range = self.__response_header["Content-Range"]
             match = re.match(
@@ -189,7 +213,7 @@ class RequestHandler:
         connection to the API.
         """
         if self.__session_token is None:
-            raise AttributeError(
+            raise GLPIError(
                 "Request handler was not initiated! Please call init_session"
                 " if you want to start a new session."
             )
@@ -232,7 +256,7 @@ class RequestHandler:
 
         """
         if self.__session_token is not None:
-            raise AttributeError("Session already initialized.")
+            raise GLPIError("Session already initialized.")
         auth = f"user_token {self.user_api_token}"
         r = self._do_get("initSession", {"Authorization": auth})
         self.__session_token = r.json()["session_token"]
@@ -253,12 +277,13 @@ class RequestHandler:
         logger.debug(f"Calling method {action}")
         if self.__session is None:
             self.__session = requests.Session()
-        r = self.__session.get(
+        response = self.__session.get(
             url, headers=headers, verify=self.verify_tls, params=parameters, data=data
         )
-        self.__response_header = r.headers
-        r.raise_for_status()
-        return r
+        self.__response_header = response.headers
+        if response.status_code >= 400:
+            raise GLPIRequestError(response)
+        return response
 
     def _get_json(
         self,
@@ -340,7 +365,7 @@ class RequestHandler:
         Defaults to the current open session."""
         if session_id is None:
             if self.__session_token is None:
-                raise AttributeError(
+                raise GLPIError(
                     "Request handler was not initiated, nothing to be done."
                 )
             else:
@@ -391,14 +416,14 @@ class RequestHandler:
 
         Raises
         ------
-        AttributeError
+        GLPIError
             When the profile can't be found.
         """
         r = self._do_post(
             "changeActiveProfile", {"profiles_id": profile_id}, on_error_raise=False
         )
         if r.status_code == 404:
-            raise AttributeError("Profile not found")
+            raise GLPIError("Profile not found")
 
     def _do_method(
         self,
@@ -406,8 +431,8 @@ class RequestHandler:
         api_method_url: str,
         data: Union[JSON, List[Tuple[str, Any]]] = None,
         headers: Dict[str, str] = None,
-        on_error_raise=True,
         files=None,
+        on_error_raise=True,
     ) -> requests.Response:
         if headers is None:
             headers = {}
@@ -419,12 +444,13 @@ class RequestHandler:
         logger.debug(
             f"Calling method {method} on {api_method_url} with {data=} and {headers=}"
         )
-        r = getattr(self.__session, method)(
+        response = getattr(self.__session, method)(
             url, headers=headers, verify=self.verify_tls, json=data, files=files
         )
         if on_error_raise:
-            r.raise_for_status()
-        return r
+            if response.status_code >= 400:
+                raise GLPIRequestError(response)
+        return response
 
     def _do_post(
         self,
@@ -494,7 +520,7 @@ class RequestHandler:
             "changeActiveEntities", {"entities_id": entity_id}, on_error_raise=False
         )
         if r.status_code == 400:
-            raise AttributeError(r.json()[1])
+            raise GLPIError(r.json()[1])
 
     def get_full_session(self) -> JSON:
         """Return the current `php`'s `$_SESSION`.
@@ -620,7 +646,7 @@ class RequestHandler:
         try:
             return self._get_json(f"{item_type}/{id_}", parameters=request_parameters)
         except requests.HTTPError as err:
-            raise AttributeError(f"{item_type} with id={id_} was not found") from err
+            raise GLPIError(f"{item_type} with id={id_} was not found") from err
 
     def get_many_items(
         self,
@@ -1203,5 +1229,5 @@ class RequestHandler:
             on_error_raise=False,
         )
         if response.status_code == 204:
-            raise AttributeError("User doesn't have a profile picture")
+            raise GLPIError("User doesn't have a profile picture")
         return response.content

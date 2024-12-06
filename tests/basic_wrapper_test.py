@@ -4,8 +4,6 @@ import sys
 import unittest
 from typing import Sized, Iterable
 
-import requests
-
 import glpilib2
 
 module_dir = pathlib.Path(__file__).parent
@@ -53,7 +51,7 @@ class TestGLPIWrapper(unittest.TestCase):
         self.assertIn("entities", self.handler.get_active_profile())
 
     def test_change_active_profile_not_found(self):
-        with self.assertRaises(AttributeError):
+        with self.assertRaises(glpilib2.GLPIError):
             self.handler.change_active_profile(0)
 
     def test_change_active_profile_found(self):
@@ -71,7 +69,7 @@ class TestGLPIWrapper(unittest.TestCase):
         self.handler.change_active_entity(0)
 
     def test_change_active_entities_not_found(self):
-        with self.assertRaises(AttributeError):
+        with self.assertRaises(glpilib2.GLPIError):
             self.handler.change_active_profile(3)
 
     def test_get_full_session(self):
@@ -480,7 +478,7 @@ class TestGLPIWrapper(unittest.TestCase):
     def test_delete_items_purge(self):
         id_ = self.handler.add_items("Software", {"name": "software purged"})["id"]
         self.handler.delete_items("Software", [id_], purge=True)
-        with self.assertRaises(AttributeError):
+        with self.assertRaises(glpilib2.GLPIError):
             self.handler.get_item("Software", id_)
 
     @unittest.skip("I have no idea how to test this")

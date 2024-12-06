@@ -1,3 +1,11 @@
-from .basic_wrapper import SortOrder, ResponseRange, RequestHandler, JSON, logger
+from .basic_wrapper import (
+    SortOrder,
+    ResponseRange,
+    RequestHandler,
+    JSON,
+    logger,
+    GLPIRequestError,
+    GLPIError,
+)
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
