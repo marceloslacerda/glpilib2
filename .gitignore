@@ -8,3 +8,4 @@ build/
 *.egg-info/
 *.swp
 docker-stuff/glpi/
+docs/

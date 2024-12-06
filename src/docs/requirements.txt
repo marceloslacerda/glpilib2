@@ -1,0 +1,3 @@
+numpydoc
+sphynx
+sphinx_rtd_theme
