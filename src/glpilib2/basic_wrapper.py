@@ -100,7 +100,7 @@ class GLPIRequestError(GLPIError):
         self.url = response.url
         self.method = response.request.method
         self.response = response
-        if not self.args:
+        if not args:
             self.args = tuple()
         else:
             self.args = args

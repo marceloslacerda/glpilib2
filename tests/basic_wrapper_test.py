@@ -50,6 +50,11 @@ class TestGLPIWrapper(unittest.TestCase):
     def test_get_active_profile(self):
         self.assertIn("entities", self.handler.get_active_profile())
 
+    def test_request_error(self):
+        with self.assertRaises(glpilib2.GLPIRequestError):
+            self.handler.delete_items("Ticket", [-999])
+
+
     def test_change_active_profile_not_found(self):
         with self.assertRaises(glpilib2.GLPIError):
             self.handler.change_active_profile(0)
