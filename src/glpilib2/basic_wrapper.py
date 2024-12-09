@@ -67,10 +67,31 @@ class ResponseRange:
 
 
 class GLPIError(Exception):
+    """Base glpilib2 exception"""
     pass
 
 
 class GLPIRequestError(GLPIError):
+    """Request error.
+
+    In some circumstances GLPI doesn't have an specific error message for a method. This exception is raised in those
+    cases with details about how the request was made and the response that was received.
+
+    Attributes
+    ----------
+    error_code: int
+        The HTTP response code
+    error_message: str
+        The error message returned by the API (might be empty)
+    request_headers: dict
+    payload: str | bytes
+    url: str
+        The final response URL
+    method: str
+        The HTTP method of the request
+    response: requests.Response
+        The actual response object is provided for further debugging
+    """
     def __init__(self, response: requests.Response, args=None):
         self.error_code = response.status_code
         self.error_message = response.text
@@ -79,8 +100,10 @@ class GLPIRequestError(GLPIError):
         self.url = response.url
         self.method = response.request.method
         self.response = response
-        if self.args:
+        if not self.args:
             self.args = tuple()
+        else:
+            self.args = args
 
     def __repr__(self):
         url = ".../" + self.url.split("/")[1]

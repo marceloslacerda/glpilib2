@@ -15,3 +15,9 @@ the canonical documentation.
 .. autoclass:: glpilib2.ResponseRange
 
 .. autoclass:: glpilib2.SortOrder
+
+.. autoclass:: glpilib2.GLPIError
+    :exclude-members: add_note, with_traceback
+
+.. autoclass:: glpilib2.GLPIRequestError
+    :exclude-members: add_note, with_traceback

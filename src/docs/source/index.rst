@@ -20,6 +20,11 @@ Features
 * A comprehensive documentation that dwelves into unusual behaviors of GLPI's
 * Some obtuse errors that GLPI throws are wrapped with more meaningful ones
 
+Documentation
+-------------
+
+https://marceloslacerda-glpilib2.readthedocs.io/en/latest/
+
 How to install
 --------------
 
