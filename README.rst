@@ -1,8 +1,7 @@
-========
 GLPILIB2
 ========
 
-`glpilib2 <https://msl09.com.br/glpilib2/>`_ is an easy to use python library for interfacing with `GLPI <https://github.com/glpi-project/glpi>`_'s API.
+**glpilib2** is an easy to use python library for interfacing with `GLPI <https://github.com/glpi-project/glpi>`_'s API.
 
 Supports GLPI 10
 
@@ -13,11 +12,17 @@ Features
 * A comprehensive documentation that dwelves into unusual behaviors of GLPI's
 * Some obtuse errors that GLPI throws are wrapped with more meaningful ones
 
+Documentation
+-------------
+
+https://marceloslacerda-glpilib2.readthedocs.io/en/latest/
+
 How to install
 --------------
 
 .. code-block:: bash
-    pip install git+https://github.com/marceloslacerda/glpi.git
+
+    pip install 'git+https://github.com/marceloslacerda/glpi.git'
 
 
 How to use
@@ -50,7 +55,7 @@ Please see the individual methods documentation for more.
 Wondering how to fill those variables called ``host_url``, ``app_token`` or ``user_api_token``? Read along! 
 
 Getting GLPI API to work
-=======================
+========================
 
 GLPI can be a bit tricky to get it to work with the API. In brief you will need
 a valid ``app_token`` a ``user_api_token`` and of course the host name/ip of the

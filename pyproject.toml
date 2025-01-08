@@ -21,7 +21,6 @@ readme = "README.md"
 license = {file = "LICENSE"}
 classifiers = [
     "Development Status :: 4 - Beta",
-
     "Intended Audience :: Developers",
     "License :: OSI Approved :: GPL3",
     "Programming Language :: Python :: 3.10",
@@ -32,10 +31,14 @@ classifiers = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest", "numpydoc", "sphynx"
+    "pytest", "numpydoc", "sphinx"
 ]
 
 [project.urls]
 Homepage = "https://github.com/marceloslacerda/glpilib2"
 Repository = "https://github.com/marceloslacerda/glpilib2.git"
 Issues = "https://github.com/marceloslacerda/glpilib2/issues"
+
+[tool.setuptools.dynamic]
+version = {attr = "glpilib2.__version__"}
+readme = {file = ["README.rst"]}
