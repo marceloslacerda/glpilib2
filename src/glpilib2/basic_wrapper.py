@@ -68,6 +68,7 @@ class ResponseRange:
 
 class GLPIError(Exception):
     """Base glpilib2 exception"""
+
     pass
 
 
@@ -92,6 +93,7 @@ class GLPIRequestError(GLPIError):
     response: requests.Response
         The actual response object is provided for further debugging
     """
+
     def __init__(self, response: requests.Response, args=None):
         self.error_code = response.status_code
         self.error_message = response.text

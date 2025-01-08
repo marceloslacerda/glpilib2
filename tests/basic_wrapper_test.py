@@ -54,7 +54,6 @@ class TestGLPIWrapper(unittest.TestCase):
         with self.assertRaises(glpilib2.GLPIRequestError):
             self.handler.delete_items("Ticket", [-999])
 
-
     def test_change_active_profile_not_found(self):
         with self.assertRaises(glpilib2.GLPIError):
             self.handler.change_active_profile(0)
