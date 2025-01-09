@@ -9,3 +9,4 @@ build/
 *.swp
 docker-stuff/glpi/
 docs/
+dist/
