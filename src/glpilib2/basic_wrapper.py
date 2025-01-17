@@ -113,6 +113,12 @@ class GLPIRequestError(GLPIError):
         error = self.error_message[: (80 - len(msg))]
         return msg + error
 
+    def __str__(self):
+        url = ".../" + self.url.split("/")[1]
+        msg = f"GLPIError({url=}, method={self.method}, code={self.error_code})=\n"
+        error = self.error_message
+        return msg + error
+
 
 class RequestHandler:
     """RequestHandler encapsulates the GLPI API in a handy class.
