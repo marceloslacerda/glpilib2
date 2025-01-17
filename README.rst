@@ -22,7 +22,7 @@ How to install
 
 .. code-block:: bash
 
-    pip install 'git+https://github.com/marceloslacerda/glpi.git'
+    pip install glpilib2
 
 
 How to use
@@ -47,10 +47,18 @@ Please see the individual methods documentation for more.
         app_token,
         user_api_token,
     )
+
+    # Session initialization is necessary for calling any other method
     handler.init_session()
-    ticket = handler.get_item("Ticket", 1)
-    handler.delete_items("Software", [6])
+
+    # From here out, use the various methods of RequestHandler to access the API, such as
+    ticket = handler.get_item("Ticket", 1) # Get the ticket with id = 1
+    handler.delete_items("Software", [6]) # Delete the software with id = 6
+
+    # After you are done using the API you can kill the session to free up server resources
     handler.kill_session()
+
+    # Check the API documentation for more information on what's available
 
 Wondering how to fill those variables called ``host_url``, ``app_token`` or ``user_api_token``? Read along! 
 
