@@ -441,6 +441,15 @@ class TestGLPIWrapper(unittest.TestCase):
         self.assertEqual(query["count"], 2)
         self.assertTrue(query["data"][0][1], query["data"][1][1])
 
+    def test_search_empty(self):
+        result = self.handler.search_items(
+            "Monitor",
+            filters=[
+                {"field": 5, "searchtype": "equals", "value": -999},
+            ],
+        )
+        self.assertEqual(result["count"], 0)
+
     def test_add_items(self):
         result = self.handler.add_items(
             "Software", {"name": "software added", "location": 1}
