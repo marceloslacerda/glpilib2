@@ -4,14 +4,17 @@ import sys
 import unittest
 from typing import Sized, Iterable
 
+test_dir = pathlib.Path(__file__).parent
+module_dir = test_dir.parent / "src"
+print(module_dir)
+sys.path.insert(0, str(module_dir.absolute()))
+
 import glpilib2
-
-module_dir = pathlib.Path(__file__).parent
-sys.path.insert(0, str(module_dir.parent.absolute()))
-
 from glpilib2 import RequestHandler, SortOrder
 
-GLPI_LOGO = pathlib.Path(module_dir / "logo-glpi-bleu-1.png")
+from glpilib2.basic_wrapper import add_criteria_to_parameters
+
+GLPI_LOGO = pathlib.Path(test_dir / "logo-glpi-bleu-1.png")
 
 
 class TestGLPIWrapper(unittest.TestCase):
@@ -414,6 +417,34 @@ class TestGLPIWrapper(unittest.TestCase):
         self.assertIn("data_html", query)
         self.assertIn("<a", query["data_html"][0][1])
 
+    def test_add_criteria_to_parameters(self):
+        parameters = []
+        add_criteria_to_parameters([], parameters)
+        assert len(parameters) == 0
+        self.assertRaises(NotImplementedError, add_criteria_to_parameters, [1], parameters)
+        add_criteria_to_parameters([{'key1': 1, 'key2': 2}], parameters)
+        assert parameters == [('criteria[0][key1]', 1), ('criteria[0][key2]', 2 )]
+
+    def test_add_criteria_to_parameters_nesting(self):
+        parameters = []
+        add_criteria_to_parameters(
+            [
+                {'key1': 1, 'key2': 2},
+                {
+                    'key3': 'text',
+                    'nested': [
+                        {'key4': 4, 'key5':'five'},
+                        {'key6': 6}
+                    ]}], parameters)
+        assert parameters == [
+            ('criteria[0][key1]', 1),
+            ('criteria[0][key2]', 2),
+            ('criteria[1][key3]', 'text'),
+            ('criteria[1][nested][0][key4]', 4),
+            ('criteria[1][nested][0][key5]', 'five'),
+            ('criteria[1][nested][1][key6]', 6),
+        ]
+
     def test_search_filters(self):
         query = self.handler.search_items(
             "Monitor",
@@ -449,6 +480,19 @@ class TestGLPIWrapper(unittest.TestCase):
             ],
         )
         self.assertEqual(result["count"], 0)
+
+    def test_search_nested(self):
+        result = self.handler.search_items(
+            "Printer",
+            filters=[
+                {"field": 31, "searchtype": "equals", "value": 1}, # Status
+                {"link": "AND", "criteria": [
+                        {"field": 4, "searchtype": "equals", "value": 2},  # Printer type
+                        {"link": "OR", "field": 4, "searchtype": "equals", "value": 3},  # Printer type
+                ]}, # Printer type
+            ],
+        )
+        self.assertEqual(result["count"], 2)
 
     def test_add_items(self):
         result = self.handler.add_items(

@@ -75,7 +75,7 @@ class GLPIError(Exception):
 class GLPIRequestError(GLPIError):
     """Request error.
 
-    In some circumstances GLPI doesn't have an specific error message for a method. This exception is raised in those
+    In some circumstances GLPI doesn't have a specific error message for a method. This exception is raised in those
     cases with details about how the request was made and the response that was received.
 
     Attributes
@@ -94,7 +94,7 @@ class GLPIRequestError(GLPIError):
         The actual response object is provided for further debugging
     """
 
-    def __init__(self, response: requests.Response, args=None):
+    def __init__(self, response: requests.Response, *args):
         self.error_code = response.status_code
         self.error_message = response.text
         self.request_headers = response.request.headers
@@ -102,10 +102,7 @@ class GLPIRequestError(GLPIError):
         self.url = response.url
         self.method = response.request.method
         self.response = response
-        if not args:
-            self.args = tuple()
-        else:
-            self.args = args
+        self.args = args
 
     def __repr__(self):
         url = ".../" + self.url.split("/")[1]
@@ -118,6 +115,21 @@ class GLPIRequestError(GLPIError):
         msg = f"GLPIError({url=}, method={self.method}, code={self.error_code})=\n"
         error = self.error_message
         return msg + error
+
+
+def add_criteria_to_parameters(criteria, parameters: list, father="criteria"):
+    if isinstance(criteria, dict):
+        for key, value in criteria.items():
+            path = f"{father}[{key}]"
+            if isinstance(value, list):
+                add_criteria_to_parameters(value, parameters, path)
+            else:
+                parameters.append((path, value))
+    elif isinstance(criteria, list):
+        for i in range(len(criteria)):
+            add_criteria_to_parameters(criteria[i], parameters, f"{father}[{i}]")
+    else:
+        raise NotImplementedError(f"__add_criteria cannot handle objects of type {type(criteria)}")
 
 
 class RequestHandler:
@@ -329,14 +341,10 @@ class RequestHandler:
             return response.json()
         except JSONDecodeError:
             if len(response.text.strip()) == 0:
-                logger.error("The API method %s produced a blank response.", method)
+                message = "GLPI produced a blank response."
             else:
-                logger.error(
-                    "Failed to decode the method %s's response as a JSON: \n%s\n ...",
-                    method,
-                    response.text[:100],
-                )
-            raise
+                message = f"Expected a JSON got a {response.text}"
+            raise GLPIRequestError(response, message)
 
     @staticmethod
     def __keys_to_int(dict_: Dict):
@@ -1083,9 +1091,7 @@ class RequestHandler:
                 "give_items": "giveItems",
             }
         )
-        for i in range(len(criteria)):
-            for key, value in criteria[i].items():
-                request_parameters.append((f"criteria[{i}][{key}]", value))
+        add_criteria_to_parameters(criteria, request_parameters)
         json = self._get_json(f"search/{item_type}", parameters=request_parameters)
         if not with_indexes:
             for d in json.get("data", []):
@@ -1093,6 +1099,7 @@ class RequestHandler:
             for d in json.get("data_html", []):
                 self.__keys_to_int(d)
         return json
+
 
     def add_items(
         self, item_type: str, data: Union[JSON, List[JSON]]
