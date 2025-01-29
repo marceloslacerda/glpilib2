@@ -129,7 +129,9 @@ def add_criteria_to_parameters(criteria, parameters: list, father="criteria"):
         for i in range(len(criteria)):
             add_criteria_to_parameters(criteria[i], parameters, f"{father}[{i}]")
     else:
-        raise NotImplementedError(f"__add_criteria cannot handle objects of type {type(criteria)}")
+        raise NotImplementedError(
+            f"__add_criteria cannot handle objects of type {type(criteria)}"
+        )
 
 
 class RequestHandler:
@@ -1099,7 +1101,6 @@ class RequestHandler:
             for d in json.get("data_html", []):
                 self.__keys_to_int(d)
         return json
-
 
     def add_items(
         self, item_type: str, data: Union[JSON, List[JSON]]

@@ -421,28 +421,28 @@ class TestGLPIWrapper(unittest.TestCase):
         parameters = []
         add_criteria_to_parameters([], parameters)
         assert len(parameters) == 0
-        self.assertRaises(NotImplementedError, add_criteria_to_parameters, [1], parameters)
-        add_criteria_to_parameters([{'key1': 1, 'key2': 2}], parameters)
-        assert parameters == [('criteria[0][key1]', 1), ('criteria[0][key2]', 2 )]
+        self.assertRaises(
+            NotImplementedError, add_criteria_to_parameters, [1], parameters
+        )
+        add_criteria_to_parameters([{"key1": 1, "key2": 2}], parameters)
+        assert parameters == [("criteria[0][key1]", 1), ("criteria[0][key2]", 2)]
 
     def test_add_criteria_to_parameters_nesting(self):
         parameters = []
         add_criteria_to_parameters(
             [
-                {'key1': 1, 'key2': 2},
-                {
-                    'key3': 'text',
-                    'nested': [
-                        {'key4': 4, 'key5':'five'},
-                        {'key6': 6}
-                    ]}], parameters)
+                {"key1": 1, "key2": 2},
+                {"key3": "text", "nested": [{"key4": 4, "key5": "five"}, {"key6": 6}]},
+            ],
+            parameters,
+        )
         assert parameters == [
-            ('criteria[0][key1]', 1),
-            ('criteria[0][key2]', 2),
-            ('criteria[1][key3]', 'text'),
-            ('criteria[1][nested][0][key4]', 4),
-            ('criteria[1][nested][0][key5]', 'five'),
-            ('criteria[1][nested][1][key6]', 6),
+            ("criteria[0][key1]", 1),
+            ("criteria[0][key2]", 2),
+            ("criteria[1][key3]", "text"),
+            ("criteria[1][nested][0][key4]", 4),
+            ("criteria[1][nested][0][key5]", "five"),
+            ("criteria[1][nested][1][key6]", 6),
         ]
 
     def test_search_filters(self):
@@ -485,11 +485,23 @@ class TestGLPIWrapper(unittest.TestCase):
         result = self.handler.search_items(
             "Printer",
             filters=[
-                {"field": 31, "searchtype": "equals", "value": 1}, # Status
-                {"link": "AND", "criteria": [
-                        {"field": 4, "searchtype": "equals", "value": 2},  # Printer type
-                        {"link": "OR", "field": 4, "searchtype": "equals", "value": 3},  # Printer type
-                ]}, # Printer type
+                {"field": 31, "searchtype": "equals", "value": 1},  # Status
+                {
+                    "link": "AND",
+                    "criteria": [
+                        {
+                            "field": 4,
+                            "searchtype": "equals",
+                            "value": 2,
+                        },  # Printer type
+                        {
+                            "link": "OR",
+                            "field": 4,
+                            "searchtype": "equals",
+                            "value": 3,
+                        },  # Printer type
+                    ],
+                },  # Printer type
             ],
         )
         self.assertEqual(result["count"], 2)
