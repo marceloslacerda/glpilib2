@@ -48,35 +48,49 @@ Please see the individual methods documentation for more.
         user_api_token,
     )
 
-    # Session initialization is necessary for calling any other method
+    # Session initialization is necessary for calling any other method.
     handler.init_session()
 
-    # From here out, use the various methods of RequestHandler to access the API, such as
-    ticket = handler.get_item("Ticket", 1) # Get the ticket with id = 1
-    handler.delete_items("Software", [6]) # Delete the software with id = 6
+    # From here out, use the various methods of RequestHandler to access
+    # the API, such as:
 
-    # After you are done using the API you can kill the session to free up server resources
+    # Get the ticket with id = 1
+    ticket = handler.get_item("Ticket", 1)
+    # Delete the software with id = 6
+    handler.delete_items("Software", [6])
+
+    # After you are done using the API you can kill the session to free
+    # up server resources.
     handler.kill_session()
 
-    # Alternatively you can use a context manager syntax to initialize the handler
-
+    # Alternatively you can use a context manager syntax to initialize
+    # the handler.
     with RequestHandler(
         host_url,
         app_token,
         user_api_token,
     ) as handler:
-        # If you want to search for items it's important to get the `field id` for the item type
-        # To do that you can use the get_search_options() method
-        handler.get_search_options("Monitor") # Returns a dict with all Monitor fields and their respective id
+        # If you want to search for items it's important to get the
+        # "field id" for the item type. To do that you can use the
+        # get_search_options() method:
+        handler.get_search_options("Monitor")
+        # Returns a dict with all Monitor fields and their respective id
+
+        # Once you know what fields to use and their respective types
+        # you can use the search_items() method to look for the items
+        # you want:
         monitors = self.handler.search_items(
             "Monitor",
             filters=[
                 {"field": 5, "searchtype": "equals", "value": 1},
             ],
-        ) # Returns monitors that have a field 5 (Serial Number) equal to 1
+        )
+        # Returns all monitors that have a field 5 (Serial Number)
+        # equal to 1.
 
-    # Check the API documentation for more information on what other methods are available
-    # and details about their parameters
+    # Check the API documentation for more information on what
+    # other methods are available, details about their parameters
+    # and examples of usage.
 
 Wondering how to fill those variables called ``host_url``, ``app_token`` or ``user_api_token``? Read along! 
 
