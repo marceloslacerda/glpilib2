@@ -58,7 +58,25 @@ Please see the individual methods documentation for more.
     # After you are done using the API you can kill the session to free up server resources
     handler.kill_session()
 
-    # Check the API documentation for more information on what's available
+    # Alternatively you can use a context manager syntax to initialize the handler
+
+    with RequestHandler(
+        host_url,
+        app_token,
+        user_api_token,
+    ) as handler:
+        # If you want to search for items it's important to get the `field id` for the item type
+        # To do that you can use the get_search_options() method
+        handler.get_search_options("Monitor") # Returns a dict with all Monitor fields and their respective id
+        monitors = self.handler.search_items(
+            "Monitor",
+            filters=[
+                {"field": 5, "searchtype": "equals", "value": 1},
+            ],
+        ) # Returns monitors that have a field 5 (Serial Number) equal to 1
+
+    # Check the API documentation for more information on what other methods are available
+    # and details about their parameters
 
 Wondering how to fill those variables called ``host_url``, ``app_token`` or ``user_api_token``? Read along! 
 

@@ -405,16 +405,38 @@ class RequestHandler:
 
         Defaults to the current open session."""
         if session_id is None:
-            if self.__session_token is None:
+            if self.session_token is None:
                 raise GLPIError(
                     "Request handler was not initiated, nothing to be done."
                 )
             else:
-                self._do_get("killSession", {"Session-Token": self.session_token})
+                session_id = self.session_token
                 self.__session_token = None
-        else:
+
+        try:
             self._do_get("killSession", {"Session-Token": session_id})
+        except GLPIRequestError as err:
+            if err.error_code == 401:
+                try:
+                    message = err.response.json()
+                except JSONDecodeError:
+                    raise err from None
+                if len(message) > 0 and message[0] == "ERROR_SESSION_TOKEN_INVALID":
+                    raise GLPIError("Session expired") from err
+                else:
+                    raise err from None
+            else:
+                raise
         logger.info("Session was terminated successfully.")
+
+    def __enter__(self):
+        self.init_session()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # No great advantage treating exceptions in here
+        self.kill_session()
+        return False  # Do raise any exception found within the `with` body
 
     def get_my_profiles(self) -> List[JSON]:
         """Return all the profiles associated to the current logged user.

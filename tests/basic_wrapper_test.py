@@ -2,6 +2,7 @@ import os
 import pathlib
 import sys
 import unittest
+from glob import has_magic
 from typing import Sized, Iterable
 
 test_dir = pathlib.Path(__file__).parent
@@ -10,7 +11,7 @@ print(module_dir)
 sys.path.insert(0, str(module_dir.absolute()))
 
 import glpilib2
-from glpilib2 import RequestHandler, SortOrder
+from glpilib2 import RequestHandler, SortOrder, GLPIError
 
 from glpilib2.basic_wrapper import add_criteria_to_parameters
 
@@ -575,6 +576,38 @@ class TestGLPIWrapper(unittest.TestCase):
     def test_download_user_profile_picture(self):
         result = self.handler.download_user_profile_picture(4)
         self.assertNotEmpty(result)
+
+    def test_context_manager(self):
+        with RequestHandler(
+            "http://localhost:8000",
+            os.environ["APP_TOKEN"],
+            os.environ["USER_API_TOKEN"],
+        ) as handler:
+            profiles = handler.get_my_profiles()
+            self.assertNotEmpty(profiles)
+            self.assertIn("entities", profiles[0])
+        # Assert that context manager expression raises internal errors
+        with self.assertRaises(glpilib2.GLPIError):
+            with RequestHandler(
+                "http://localhost:8000",
+                os.environ["APP_TOKEN"],
+                os.environ["USER_API_TOKEN"],
+            ) as handler:
+                handler.change_active_profile(3)
+
+    def test_kill_session_clear_session_on_error(self):
+        handler = RequestHandler(
+            "http://localhost:8000",
+            os.environ["APP_TOKEN"],
+            os.environ["USER_API_TOKEN"],
+        )
+        handler.init_session()
+        try:
+            handler.kill_session(handler.session_token)
+            handler.kill_session()
+            assert False
+        except GLPIError:
+            self.assertRaises(GLPIError, lambda: handler.session_token)
 
 
 if __name__ == "__main__":
